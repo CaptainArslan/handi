@@ -1,0 +1,272 @@
+/*
+ * Handi Admin theme — layered on top of Filament's stylesheet (no build step).
+ * Colours/fonts follow the app design: deep green #0F5C4D, amber #F2A93B, cream #FBF7F1,
+ * Poppins for all text (700 for headings and numbers).
+ */
+
+
+:root {
+    --handi-green: #0F5C4D;
+    --handi-green-deep: #0B4A3E;
+    --handi-green-ink: #0A4338;
+    --handi-amber: #F2A93B;
+    --handi-cream: #FBF7F1;
+    --handi-sand: #F6F1E9;
+    --handi-line: #ECE4D8;
+    --handi-ink: #1C1A17;
+    --handi-muted: #6B645B;
+    --handi-display: 'Poppins', ui-sans-serif, system-ui, sans-serif;
+    --handi-card-shadow: 0 1px 2px rgba(60, 40, 10, .04), 0 10px 30px -12px rgba(60, 40, 10, .10);
+}
+
+/* ------------------------------------------------------------------ base */
+/* Readable sizes: Poppins everywhere, body text 15–16px, nothing below ~13px. */
+.fi-body, .fi-body input, .fi-body select, .fi-body textarea, .fi-body button { font-family: 'Poppins', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif; }
+.fi-body { font-size: 14.5px; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+.fi-ta-text-item, .fi-ta-text-item-label, .fi-in-text-item, .fi-in-text, .fi-ta-cell { font-size: .95rem !important; }
+.fi-ta-text-item .fi-ta-text-description, .fi-ta-text-description, .fi-in-entry-helper-text, .fi-fo-field-wrp-helper-text, .fi-sc-text { font-size: .875rem !important; }
+.fi-input, .fi-select-input, .fi-fo-field-label-content, .fi-fo-field-label { font-size: .95rem !important; }
+.fi-badge, .fi-badge-label { font-size: .8rem !important; }
+.fi-btn, .fi-btn-label, .fi-link, .fi-dropdown-list-item-label, .fi-tabs-item-label { font-size: .95rem !important; }
+.fi-pagination, .fi-pagination-overview, .fi-ta-header-toolbar { font-size: .9rem !important; }
+.fi-section-header-description, .fi-header-subheading, .fi-wi-stats-overview-stat-description { font-size: .95rem !important; }
+.fi-wi-stats-overview-stat-description { font-size: .9rem !important; }
+.fi-body { background: var(--handi-cream); color: var(--handi-ink); }
+.fi-body ::selection { background: #DCEDE6; }
+
+.fi-header-heading,
+.fi-simple-header-heading,
+.fi-section-header-heading,
+.fi-ta-header-heading,
+.fi-wi-stats-overview-stat-value,
+.fi-modal-heading,
+.handi-display {
+    font-family: var(--handi-display) !important;
+    letter-spacing: -0.02em;
+}
+
+.fi-header-heading { font-size: 1.9rem !important; line-height: 1.15 !important; font-weight: 700 !important; }
+.fi-header-subheading { color: var(--handi-muted) !important; }
+.fi-breadcrumbs-item-label { font-size: .9rem !important; }
+
+/* ------------------------------------------------------------------ brand */
+/* Animated clay-pot logo (looping muted video on the cream logo colour #FBF7F1). */
+.handi-brand { display: flex; align-items: center; gap: .75rem; min-width: 0; }
+.handi-brand-mark {
+    width: 48px; height: 48px; flex: none; border-radius: 14px; overflow: hidden;
+    background: var(--handi-cream);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, .55), 0 6px 16px -6px rgba(0, 0, 0, .35);
+}
+.handi-brand-mark video { width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.18) translateY(2%); }
+.handi-brand-text { display: flex; flex-direction: column; line-height: 1; min-width: 0; }
+.handi-brand-name { font-family: var(--handi-display); font-weight: 700; font-size: 1.35rem; letter-spacing: -0.03em; color: var(--handi-ink); }
+.handi-brand-sub { font-size: .78rem; font-weight: 500; font-style: italic; color: var(--handi-muted); margin-top: .28rem; white-space: nowrap; }
+.fi-sidebar .handi-brand-name { color: #fff; }
+.fi-sidebar .handi-brand-sub { color: #FFD99A; }
+.fi-logo { height: auto !important; }
+
+/* ------------------------------------------------------------------ sidebar */
+.fi-sidebar {
+    background: linear-gradient(180deg, var(--handi-green) 0%, var(--handi-green-deep) 100%) !important;
+    border-right: 0 !important;
+}
+.fi-sidebar-header,
+.fi-sidebar .fi-sidebar-header-ctn {
+    background: transparent !important;
+    box-shadow: none !important;
+    border-bottom: 1px solid rgba(255, 255, 255, .08) !important;
+}
+.fi-sidebar-nav { padding-top: 1.25rem !important; }
+.fi-sidebar-group-label,
+.fi-sidebar-group-btn span { color: rgba(207, 229, 221, .78) !important; font-size: .78rem !important; letter-spacing: .12em; text-transform: uppercase; font-weight: 700 !important; }
+.fi-sidebar-group-collapse-btn { color: rgba(207, 229, 221, .6) !important; }
+.fi-sidebar-item-btn { border-radius: 12px !important; transition: background .15s ease; }
+.fi-sidebar-item-btn:hover { background: rgba(255, 255, 255, .07) !important; }
+.fi-sidebar-item-label { color: #E6F1EC !important; font-weight: 500 !important; font-size: .975rem !important; }
+.fi-sidebar-item-btn > svg,
+.fi-sidebar-item-icon { color: rgba(207, 229, 221, .75) !important; }
+.fi-sidebar-item.fi-active > .fi-sidebar-item-btn {
+    background: rgba(255, 255, 255, .12) !important;
+    box-shadow: inset 3px 0 0 var(--handi-amber);
+}
+.fi-sidebar-item.fi-active .fi-sidebar-item-label { color: #fff !important; font-weight: 700 !important; }
+.fi-sidebar-item.fi-active > .fi-sidebar-item-btn > svg,
+.fi-sidebar-item.fi-active .fi-sidebar-item-icon { color: var(--handi-amber) !important; }
+.fi-sidebar-item-badge-ctn .fi-badge { background: rgba(242, 169, 59, .18) !important; color: #FFD99A !important; box-shadow: none !important; }
+.handi-sidebar-footer { margin: auto 1rem 1rem; padding: .85rem 1rem; border-radius: 14px; background: rgba(255, 255, 255, .07); color: #CFE5DD; font-size: .85rem; line-height: 1.45; }
+.handi-sidebar-footer strong { display: block; color: #fff; font-size: .9rem; margin-bottom: .15rem; }
+
+/* ------------------------------------------------------------------ topbar */
+.fi-body { --topbar-height: 4.5rem; }
+.fi-topbar-ctn { background: transparent !important; box-shadow: none !important; }
+.fi-topbar {
+    min-height: var(--topbar-height) !important;
+    background: rgba(251, 247, 241, .9) !important;
+    backdrop-filter: saturate(160%) blur(10px);
+    border: 0 !important;
+    --tw-ring-shadow: 0 0 #0000 !important;
+    box-shadow: inset 0 -1px 0 var(--handi-line), 0 8px 24px -18px rgba(60, 40, 10, .25) !important;
+    gap: .75rem;
+}
+.fi-topbar .fi-icon-btn { color: var(--handi-muted); }
+.fi-topbar-end { gap: .9rem !important; }
+
+/* Desktop: the brand sits in a green block exactly as wide as the sidebar, so the two read as one. */
+@media (min-width: 64rem) {
+    .fi-topbar { padding-inline-start: 0 !important; }
+    .fi-topbar-start {
+        align-self: stretch;
+        width: var(--sidebar-width);
+        flex: none;
+        margin-inline-end: 1.25rem !important;
+        padding-inline: 1.1rem .6rem;
+        background: linear-gradient(180deg, #11634F 0%, var(--handi-green) 100%);
+        box-shadow: inset 0 -1px 0 rgba(255, 255, 255, .08);
+        transition: width .2s ease;
+    }
+    .fi-topbar-start > a { order: 1; flex: 1; min-width: 0; }
+    .fi-topbar-start .fi-logo { margin-inline-start: 0 !important; }
+    .fi-topbar-start .fi-topbar-collapse-sidebar-btn-ctn { order: 2; margin: 0 !important; }
+    .fi-topbar-start .fi-icon-btn { color: rgba(230, 241, 236, .8) !important; border-radius: 10px; }
+    .fi-topbar-start .fi-icon-btn:hover { background: rgba(255, 255, 255, .1) !important; color: #fff !important; }
+    .fi-topbar-start .handi-brand-name { color: #fff; }
+    .fi-topbar-start .handi-brand-sub { color: #FFD99A; }
+
+    /* Collapsed sidebar: the block narrows to the icon rail and only shows the expand button. */
+    .fi-body:has(.fi-main-sidebar:not(.fi-sidebar-open)) .fi-topbar-start {
+        width: var(--collapsed-sidebar-width); padding-inline: 0; justify-content: center;
+    }
+    .fi-body:has(.fi-main-sidebar:not(.fi-sidebar-open)) .fi-topbar-start > a { display: none; }
+}
+
+.handi-topbar-date {
+    display: inline-flex; align-items: center; gap: .45rem; white-space: nowrap;
+    padding: .45rem .8rem; border-radius: 999px; background: #fff; border: 1px solid var(--handi-line);
+    color: var(--handi-muted); font-size: .85rem; font-weight: 500;
+}
+.handi-topbar-date svg { width: 16px; height: 16px; color: var(--handi-green); }
+.handi-topbar-user { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.15; margin-inline-end: -.35rem; }
+.handi-topbar-user-name { font-weight: 600; font-size: .92rem; color: var(--handi-ink); max-width: 14rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.handi-topbar-user-role { font-size: .75rem; font-weight: 600; color: #B7791F; letter-spacing: .02em; }
+@media (max-width: 63.99rem) { .handi-topbar-user { display: none; } }
+@media (max-width: 47.99rem) { .handi-topbar-date { display: none; } }
+
+.fi-global-search-field .fi-input-wrp { border-radius: 12px !important; background: #fff !important; min-width: 16rem; }
+.fi-user-avatar { box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px var(--handi-amber); }
+
+/* ------------------------------------------------------------------ cards */
+.fi-section:not(.fi-section-not-contained),
+.fi-ta-ctn,
+.fi-wi-stats-overview-stat,
+.fi-wi-chart .fi-section,
+.fi-fo-repeater-item {
+    border-radius: 18px !important;
+    border: 1px solid var(--handi-line) !important;
+    box-shadow: var(--handi-card-shadow) !important;
+    --tw-ring-shadow: 0 0 #0000 !important;
+    background: #fff;
+}
+.fi-section-header { padding-top: 1.1rem !important; padding-bottom: 1rem !important; }
+.fi-section-header-heading { font-size: 1.15rem !important; }
+.fi-section-header-description { color: var(--handi-muted) !important; }
+
+/* ------------------------------------------------------------------ stats */
+.fi-wi-stats-overview-stat { padding: 1.35rem 1.4rem !important; overflow: hidden; position: relative; }
+.fi-wi-stats-overview-stat-label { font-size: .85rem !important; font-weight: 700 !important; letter-spacing: .06em; text-transform: uppercase; color: var(--handi-muted) !important; }
+.fi-wi-stats-overview-stat-value { font-size: 2.2rem !important; line-height: 1.1 !important; font-weight: 700 !important; color: var(--handi-ink) !important; }
+.fi-wi-stats-overview-stat-label-ctn svg { width: 2.25rem !important; height: 2.25rem !important; padding: .5rem; border-radius: 12px; background: #E3F0EB; color: var(--handi-green) !important; }
+
+/* ------------------------------------------------------------------ tables */
+.fi-ta-header-cell { background: #FBF8F3 !important; }
+.fi-ta-header-cell,
+.fi-ta-header-cell button span { font-size: .8rem !important; font-weight: 700 !important; letter-spacing: .06em; text-transform: uppercase; color: var(--handi-muted) !important; }
+.fi-ta-row { transition: background .12s ease; }
+.fi-ta-row:hover { background: #FFFCF6 !important; }
+.fi-ta-cell { padding-top: .8rem; padding-bottom: .8rem; }
+.fi-ta-header { border-bottom: 1px solid var(--handi-line); }
+.fi-ta-empty-state-icon-bg { background: #E3F0EB !important; }
+.fi-ta-empty-state-icon-bg svg { color: var(--handi-green) !important; }
+
+/* ------------------------------------------------------------------ controls */
+.fi-btn { border-radius: 12px !important; font-weight: 600 !important; }
+.fi-badge { border-radius: 999px !important; font-weight: 600 !important; }
+.fi-input-wrp { border-radius: 12px !important; }
+.fi-tabs { border-radius: 14px !important; background: #EFE8DC !important; box-shadow: none !important; padding: 4px !important; }
+.fi-tabs-item { border-radius: 10px !important; }
+.fi-tabs-item.fi-active { background: #fff !important; box-shadow: 0 1px 4px rgba(60, 40, 10, .12) !important; }
+.fi-tabs-item.fi-active .fi-tabs-item-label { color: var(--handi-ink) !important; }
+.fi-in-entry-label { color: var(--handi-muted) !important; font-size: .85rem !important; font-weight: 600 !important; letter-spacing: .02em; }
+
+/* ------------------------------------------------------------------ login */
+.fi-simple-layout {
+    background:
+        radial-gradient(circle at 15% 20%, rgba(242, 169, 59, .22) 0, transparent 34%),
+        radial-gradient(circle at 85% 80%, rgba(255, 255, 255, .08) 0, transparent 40%),
+        linear-gradient(160deg, var(--handi-green) 0%, var(--handi-green-deep) 100%) !important;
+}
+.fi-simple-main {
+    border-radius: 26px !important;
+    box-shadow: 0 30px 80px -20px rgba(0, 0, 0, .45) !important;
+    border: 0 !important;
+    --tw-ring-shadow: 0 0 #0000 !important;
+}
+.fi-simple-main { background: var(--handi-cream) !important; }
+.fi-simple-main .fi-input-wrp { background: #fff !important; }
+.fi-simple-header .fi-logo { height: auto !important; margin-bottom: 0; }
+.handi-brand-full { width: 190px; margin: -.75rem auto .6rem; }
+.handi-brand-full video { width: 100%; height: auto; display: block; aspect-ratio: 440 / 640; }
+.fi-simple-header-heading { font-size: 1.6rem !important; }
+.handi-login-note { text-align: center; color: var(--handi-muted); font-size: .95rem; margin-top: -.25rem; }
+.handi-login-foot { position: static; padding: 1.25rem 0 1.5rem; text-align: center; color: rgba(207, 229, 221, .85); font-size: .85rem; }
+
+/* ------------------------------------------------------------------ dashboard welcome */
+.handi-hero {
+    position: relative; overflow: hidden; border-radius: 22px; padding: 1.6rem 1.75rem;
+    color: #fff; background: linear-gradient(135deg, var(--handi-green) 0%, var(--handi-green-deep) 100%);
+    box-shadow: 0 18px 40px -18px rgba(15, 92, 77, .55);
+}
+.handi-hero::after { content: ''; position: absolute; right: -60px; top: -60px; width: 220px; height: 220px; border-radius: 50%; border: 2px dashed rgba(242, 169, 59, .55); }
+.handi-hero::before { content: ''; position: absolute; right: 40px; bottom: -70px; width: 160px; height: 160px; border-radius: 50%; background: rgba(242, 169, 59, .16); }
+.handi-hero-eyebrow { font-size: .8rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--handi-amber); }
+.handi-hero-title { font-family: var(--handi-display); font-size: 1.75rem; font-weight: 700; letter-spacing: -.02em; margin-top: .3rem; }
+.handi-hero-sub { color: #CFE5DD; margin-top: .35rem; font-size: 1.05rem; max-width: 46rem; }
+.handi-hero-actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1.2rem; position: relative; z-index: 1; }
+.handi-chip-link { display: inline-flex; align-items: center; gap: .45rem; padding: .6rem 1.05rem; border-radius: 999px; font-size: .95rem; font-weight: 600; background: rgba(255, 255, 255, .12); color: #fff; transition: background .15s ease; }
+.handi-chip-link:hover { background: rgba(255, 255, 255, .2); }
+.handi-chip-link.is-primary { background: var(--handi-amber); color: var(--handi-ink); }
+.handi-chip-link svg { width: 1rem; height: 1rem; }
+
+/* ------------------------------------------------------------------ user header (view page) */
+.handi-user-card { display: flex; align-items: center; gap: 1.1rem; }
+.handi-user-card img { width: 64px; height: 64px; border-radius: 999px; box-shadow: 0 0 0 3px #fff, 0 6px 18px rgba(60, 40, 10, .15); }
+.handi-user-name { font-family: var(--handi-display); font-weight: 700; font-size: 1.35rem; letter-spacing: -.02em; }
+.handi-user-meta { color: var(--handi-muted); font-size: 1rem; margin-top: .1rem; }
+.handi-pills { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .55rem; }
+.handi-pill { display: inline-flex; align-items: center; gap: .35rem; font-size: .85rem; font-weight: 600; padding: .25rem .65rem; border-radius: 999px; background: var(--handi-sand); color: #3A352F; }
+.handi-pill.green { background: #E3F0EB; color: var(--handi-green-ink); }
+.handi-pill.amber { background: #FDF0D9; color: #6E4708; }
+.handi-pill.red { background: #FBE6E0; color: #7A2E1B; }
+.handi-pill .dot { width: 7px; height: 7px; border-radius: 999px; background: currentColor; }
+
+.handi-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+@media (min-width: 1024px) { .handi-metrics { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+.handi-metric { background: #fff; border: 1px solid var(--handi-line); border-radius: 16px; padding: .9rem 1rem; box-shadow: var(--handi-card-shadow); }
+.handi-metric-label { font-size: .8rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--handi-muted); }
+.handi-metric-value { font-family: var(--handi-display); font-size: 1.6rem; font-weight: 700; letter-spacing: -.02em; margin-top: .2rem; color: var(--handi-ink); }
+.handi-metric-value small { font-family: 'Poppins', sans-serif; font-size: .9rem; font-weight: 600; color: var(--handi-muted); letter-spacing: 0; }
+.handi-summary { display: flex; flex-direction: column; gap: 1rem; }
+
+/* ------------------------------------------------------------------ image preview */
+.handi-lightbox { border-radius: 18px; overflow: hidden; display: flex; align-items: center; justify-content: center; min-height: 320px; }
+.handi-lightbox img { display: block; width: 100%; max-height: 70vh; object-fit: contain; }
+.handi-lightbox-empty { color: var(--handi-muted); }
+.handi-lightbox-actions { margin-top: .75rem; text-align: right; font-size: .9rem; font-weight: 600; }
+.handi-lightbox-actions a { color: var(--handi-green); }
+.fi-ta-image img { cursor: zoom-in; transition: transform .15s ease; }
+.fi-ta-image img:hover { transform: scale(1.06); }
+/* existing picture in the edit dropzone: larger preview */
+.handi-dropzone .filepond--root { min-height: 220px; }
+
+/* ------------------------------------------------------------------ import modal */
+.handi-import-help { font-size: .875rem; line-height: 1.6; color: var(--handi-muted); background: var(--handi-sand); border-radius: 12px; padding: .75rem .9rem; }
+.handi-import-help code { font-size: .8rem; background: #fff; border: 1px solid var(--handi-line); border-radius: 6px; padding: 0 .3rem; color: var(--handi-ink); }

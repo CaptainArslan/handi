@@ -1,0 +1,3 @@
+# Add with `crontab -e -u www-data` (Forge: Scheduler tab → "php artisan schedule:run", every minute).
+# Runs reminders:dispatch every minute (each user's reminder time, in their timezone).
+* * * * * cd /var/www/handi/backend && php artisan schedule:run >> /dev/null 2>&1

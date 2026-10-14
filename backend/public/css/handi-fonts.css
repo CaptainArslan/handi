@@ -1,0 +1,5 @@
+/* Poppins, bundled with the backend (no CDN) — used for all admin text and headings. */
+@font-face { font-family: 'Poppins'; font-style: normal; font-weight: 400; font-display: swap; src: url('../fonts/handi/Poppins_400Regular.ttf') format('truetype'); }
+@font-face { font-family: 'Poppins'; font-style: normal; font-weight: 500; font-display: swap; src: url('../fonts/handi/Poppins_500Medium.ttf') format('truetype'); }
+@font-face { font-family: 'Poppins'; font-style: normal; font-weight: 600; font-display: swap; src: url('../fonts/handi/Poppins_600SemiBold.ttf') format('truetype'); }
+@font-face { font-family: 'Poppins'; font-style: normal; font-weight: 700; font-display: swap; src: url('../fonts/handi/Poppins_700Bold.ttf') format('truetype'); }
