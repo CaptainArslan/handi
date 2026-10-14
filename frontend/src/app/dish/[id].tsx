@@ -7,6 +7,7 @@ import { errorMessage } from '@/api/client';
 import { endpoints } from '@/api/endpoints';
 import { qk, useDish } from '@/api/queries';
 import type { Cost, Effort, KitchenDishDetail, UsualMeal, WeatherTag } from '@/api/types';
+import { AiPhotoHelper } from '@/components/AiPhotoHelper';
 import { goBack } from '@/components/AuthKit';
 import { DishImage } from '@/components/DishImage';
 import { WeatherChips } from '@/components/Kitchen';
@@ -116,7 +117,7 @@ function Detail({ dish }: { dish: KitchenDishDetail }) {
       setDraft(null);
       invalidate();
     } catch (e) {
-      flash({ title: 'Couldn’t save changes', sub: errorMessage(e), tone: 'info' });
+      flash({ title: 'Couldn’t save changes', sub: errorMessage(e), tone: 'error' });
     } finally {
       setSaving(false);
     }
@@ -134,7 +135,7 @@ function Detail({ dish }: { dish: KitchenDishDetail }) {
       setDraft(null);
       invalidate();
     } catch (e) {
-      flash({ title: 'Couldn’t reset the tags', sub: errorMessage(e), tone: 'info' });
+      flash({ title: 'Couldn’t reset the tags', sub: errorMessage(e), tone: 'error' });
     } finally {
       setResetting(false);
     }
@@ -156,7 +157,7 @@ function Detail({ dish }: { dish: KitchenDishDetail }) {
       timer.current = setTimeout(() => setPhoto('idle'), next.photo_status === 'processing' ? 2500 : 900);
     } catch (e) {
       setPhoto('idle');
-      flash({ title: 'Couldn’t upload the photo', sub: errorMessage(e), tone: 'info' });
+      flash({ title: 'Couldn’t upload the photo', sub: errorMessage(e), tone: 'error' });
     }
   };
 
@@ -191,7 +192,7 @@ function Detail({ dish }: { dish: KitchenDishDetail }) {
     } catch (e) {
       setRemoving(false);
       setConfirmOpen(false);
-      flash({ title: `Couldn’t remove ${name}`, sub: errorMessage(e), tone: 'info' });
+      flash({ title: `Couldn’t remove ${name}`, sub: errorMessage(e), tone: 'error' });
     }
   };
 
@@ -242,6 +243,8 @@ function Detail({ dish }: { dish: KitchenDishDetail }) {
             <Stat label="Next eligible" value={eligibleNow ? 'Now' : dayMonth(nextISO)} green={eligibleNow} />
           </View>
 
+          {custom && !dish.has_photo && !busy ? <AiPhotoHelper dishName={dish.name} onUpload={changePhoto} /> : null}
+
           <View style={{ gap: 10 }}>
             <Txt v="section">Good for weather</Txt>
             <WeatherChips value={tags.weather} onChange={(weather) => set({ weather })} invalid={wxErr} />
@@ -279,7 +282,7 @@ function Detail({ dish }: { dish: KitchenDishDetail }) {
       ) : null}
 
       <Sheet visible={confirmOpen} onClose={() => !removing && setConfirmOpen(false)} scrim="light" accessibilityLabel={`Remove ${dish.name}?`}>
-        <DishImage imageUrl={dish.image_url} imageKey={dish.image_key} bg={dish.image_bg} scale={1} radius={18} style={{ width: 64, height: 64 }} />
+        <DishImage imageUrl={dish.thumb_url ?? dish.image_url} imageKey={dish.image_key} bg={dish.image_bg} scale={1} radius={18} style={{ width: 64, height: 64 }} />
         <Txt v="sheetTitle" accessibilityRole="header">
           {`Remove ${dish.name}?`}
         </Txt>

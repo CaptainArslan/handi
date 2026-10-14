@@ -17,12 +17,29 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        // Telescope (/telescope) — only when the package is installed (`composer require laravel/telescope`).
+        if (class_exists(\Laravel\Telescope\TelescopeApplicationServiceProvider::class)) {
+            $this->app->register(TelescopeServiceProvider::class);
+        }
     }
 
     public function boot(): void
     {
         JsonResource::wrap('data');
+
+        // TRUSTED_PROXIES (config/app.php): needed for https + logins through ngrok / Herd Share.
+        if ($proxies = config('app.trusted_proxies')) {
+            \Illuminate\Http\Middleware\TrustProxies::at($proxies === '*' ? '*' : array_map('trim', explode(',', $proxies)));
+        }
+
+        // A library dish photo (or its thumbnails) changed: the cached library must be rebuilt.
+        $flushForDish = function (\Spatie\MediaLibrary\MediaCollections\Models\Media $media): void {
+            if ($media->model_type === \App\Models\Dish::class) {
+                \App\Support\CatalogCache::flush();
+            }
+        };
+        \Spatie\MediaLibrary\MediaCollections\Models\Media::saved($flushForDish);
+        \Spatie\MediaLibrary\MediaCollections\Models\Media::deleted($flushForDish);
 
         RateLimiter::for('api', function (Request $request) {
             $user = $request->user('sanctum');

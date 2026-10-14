@@ -20,4 +20,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        // Upload bigger than PHP's post_max_size: a clear message instead of an empty 413.
+        $exceptions->render(function (\Illuminate\Http\Exceptions\PostTooLargeException $e, Request $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return response()->json(['message' => 'That photo is too large to upload. Try a smaller one.'], 413);
+            }
+        });
     })->create();

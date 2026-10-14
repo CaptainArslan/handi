@@ -67,8 +67,8 @@ class CustomDishController extends Controller
         $dish = $this->kitchens->createCustomDish($request->user(), $data);
 
         if ($request->hasFile('photo')) {
-            $path = $request->file('photo')->storeAs('kitchen-photos/'.$dish->user_id, Str::uuid().'.'.$request->file('photo')->extension(), ['disk' => config('handi.media_disk'), 'visibility' => 'public']);
-            $dish->update(['photo_path' => $path, 'photo_status' => PhotoStatus::Ready]);
+            $dish->attachPhoto($request->file('photo'));
+            $dish->update(['photo_status' => PhotoStatus::Ready]);
             $notifications->notify($request->user(), NotificationType::PhotoReady, 'Photo added',
                 'Your photo of '.$dish->effectiveName().' is ready and now shows in suggestions.', 'View dish', '/dishes/'.$dish->id, $dish->imageKey());
         }
@@ -157,7 +157,7 @@ class CustomDishController extends Controller
             'category.required' => 'Choose a category.',
             'category.exists' => 'Choose a category.',
             ...Rules::weatherMessages(),
-            'photo.max' => 'Photos can be up to 10 MB.',
+            'photo.max' => 'Photos can be up to 10 MB.', 'photo.uploaded' => 'That photo is too large to upload. Try a smaller one.',
         ]);
 
         if (! isset($data['name'])) {

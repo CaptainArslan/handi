@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { Keyframe } from 'react-native-reanimated';
 
@@ -8,6 +8,7 @@ import { useBottom, useTop } from '@/components/Layout';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { Txt } from '@/components/ui/Txt';
+import { API_URL } from '@/lib/config';
 import { useNet } from '@/store/net';
 import { C } from '@/theme/tokens';
 
@@ -28,12 +29,21 @@ export default function NoConnection() {
   const [tries, setTries] = useState(0);
   const [checking, setChecking] = useState(false);
   const [online, setOnline] = useState(false);
+  // The phone has internet but our server didn't answer: a server/address problem, not Wi-Fi.
+  const [serverIssue, setServerIssue] = useState(false);
+
+  useEffect(() => {
+    recheck()
+      .then(setServerIssue)
+      .catch(() => undefined);
+  }, [recheck]);
 
   const retry = async () => {
     if (checking) return;
     setChecking(true);
     const [isOnline] = await Promise.all([recheck().catch(() => false), wait(1400)]);
     const ok = isOnline ? await downloadLibrary() : false;
+    setServerIssue(isOnline && !ok);
     setChecking(false);
     if (ok) setOnline(true);
     else setTries((t) => t + 1);
@@ -56,16 +66,29 @@ export default function NoConnection() {
 
         <View style={{ gap: 10, alignItems: 'center' }}>
           <Txt v="h1" align="center" accessibilityRole="header">
-            {online ? 'You’re back online' : 'You’re offline'}
+            {online ? 'You’re back online' : serverIssue ? 'Can’t reach Handi' : 'You’re offline'}
           </Txt>
           <Txt v="bodyL" lh={24.8} color={C.muted} align="center" style={{ maxWidth: 310 }}>
             {online
               ? 'Dish library downloaded. From now on, today’s picks and your history work even without internet.'
-              : 'We need internet once to download the dish library. It’s small, under 1 MB.'}
+              : serverIssue
+                ? 'You’re connected, but our server isn’t answering right now. Please try again in a moment.'
+                : 'We need internet once to download the dish library. It’s small, under 1 MB.'}
           </Txt>
         </View>
 
-        {!online ? (
+        {!online && serverIssue && __DEV__ ? (
+          <View style={styles.devHint}>
+            <Txt v="bodyS" weight={600} color={C.ink}>
+              Developer: the API didn’t answer
+            </Txt>
+            <Txt v="bodyS" color={C.ink2}>
+              {`Tried ${API_URL}\nCheck EXPO_PUBLIC_API_BASE_URL in frontend/.env (emulator: http://10.0.2.2:8000, phone: your PC's LAN IP), that \`php artisan serve --host=0.0.0.0 --port=8000\` is running, then restart with \`npx expo start -c\`.`}
+            </Txt>
+          </View>
+        ) : null}
+
+        {!online && !serverIssue ? (
           <View style={styles.tips}>
             {TIPS.map((t) => (
               <View key={t} style={{ flexDirection: 'row', gap: 10 }}>
@@ -96,5 +119,6 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 28 },
   tile: { width: 132, height: 132, borderRadius: 44, alignItems: 'center', justifyContent: 'center' },
   tips: { alignSelf: 'stretch', padding: 16, borderRadius: 18, backgroundColor: C.white, borderWidth: 1, borderColor: C.borderSoft, gap: 12 },
+  devHint: { alignSelf: 'stretch', padding: 14, borderRadius: 14, backgroundColor: '#FDF0D9', gap: 6 },
   bullet: { width: 8, height: 8, borderRadius: 4, backgroundColor: C.accent, marginTop: 6 },
 });

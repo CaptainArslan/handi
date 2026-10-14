@@ -18,6 +18,7 @@ export const qk = {
   library: (p?: { q?: string; category?: string }) => ['library', p ?? {}] as const,
   cities: (q?: string) => ['cities', q ?? ''] as const,
   legal: (doc: 'terms' | 'privacy') => ['legal', doc] as const,
+  imagePrompt: ['image-prompt'] as const,
 };
 
 /** Re-renders when the user signs in or out, so queries start/stop with the session. */
@@ -80,3 +81,6 @@ export const useCities = (q?: string) =>
   useQuery({ queryKey: qk.cities(q), queryFn: () => endpoints.cities(q), staleTime: 60 * 60 * 1000, placeholderData: keepPreviousData });
 
 export const useLegal = (doc: 'terms' | 'privacy') => useQuery({ queryKey: qk.legal(doc), queryFn: () => endpoints.legal(doc), staleTime: 24 * 60 * 60 * 1000 });
+
+/** The admin-edited AI photo prompt. Refreshed every few minutes so admin edits show up quickly. */
+export const useImagePrompt = () => useQuery({ queryKey: qk.imagePrompt, queryFn: endpoints.imagePrompt, staleTime: 5 * 60 * 1000 });

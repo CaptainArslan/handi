@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CatalogController;
 use App\Http\Controllers\Api\V1\CustomDishController;
 use App\Http\Controllers\Api\V1\DishController;
+use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\KitchenController;
 use App\Http\Controllers\Api\V1\MealController;
 use App\Http\Controllers\Api\V1\NotificationController;
@@ -24,11 +25,13 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 
     // ---------------------------------------------------------------- Public
     Route::middleware('throttle:api')->group(function () {
+        Route::get('health', HealthController::class)->name('health');
         Route::get('library/dishes', [CatalogController::class, 'dishes'])->name('library.dishes');
         Route::get('categories', [CatalogController::class, 'categories'])->name('categories');
         Route::get('cities', [CatalogController::class, 'cities'])->name('cities');
         Route::get('weather', [CatalogController::class, 'weather'])->name('weather');
         Route::get('legal/{document}', [CatalogController::class, 'legal'])->whereIn('document', ['terms', 'privacy'])->name('legal');
+        Route::get('image-prompt', [CatalogController::class, 'imagePrompt'])->name('image-prompt');
         Route::post('preview-picks', PreviewController::class)->name('preview-picks');
     });
 

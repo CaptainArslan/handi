@@ -14,7 +14,8 @@ use App\Models\Dish;
 use BackedEnum;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\CheckboxList;
-use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -64,10 +65,23 @@ class DishResource extends Resource
                 Textarea::make('description')->rows(2)->maxLength(1000)->columnSpanFull(),
             ]),
             Section::make('Picture')->columns(2)->columnSpanFull()->schema([
-                FileUpload::make('image')->label('Photo')->image()->imageEditor()
-                    ->disk(config('handi.media_disk'))->directory('dishes')->visibility('public')->maxSize(4096)
+                SpatieMediaLibraryFileUpload::make('photo')->label('Photo')->collection('image')->image()->imageEditor()
+                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])->maxSize(10240)
                     ->imagePreviewHeight('220')->panelAspectRatio('4:3')->extraAttributes(['class' => 'handi-dropzone'])
-                    ->helperText('Shows the current picture. Drop a new photo to replace it; remove it to go back to the bundled art.'),
+                    // Through the model: the original is capped at 1600 px and thumb/card sizes are made.
+                    ->saveUploadedFileUsing(function (TemporaryUploadedFile $file, ?Dish $record): ?string {
+                        if (! $record) {
+                            return null;
+                        }
+                        $tmp = tempnam(sys_get_temp_dir(), 'up');
+                        file_put_contents($tmp, $file->get());
+                        try {
+                            return $record->attachPhoto($tmp)->getAttributeValue('uuid');
+                        } finally {
+                            @unlink($tmp);
+                        }
+                    })
+                    ->helperText('Drop a photo (JPG, PNG or WebP, up to 10 MB). It is resized and thumbnails are made automatically. Without a photo the bundled art below is used.'),
                 Select::make('image_key')->label('Or bundled art')->options(ArtKeys::options())
                     ->helperText('Used when there is no photo. Empty = the category default.'),
             ]),
@@ -88,10 +102,10 @@ class DishResource extends Resource
         return $table
             ->defaultSort('name')
             ->columns([
-                ImageColumn::make('image')->label('')->disk(config('handi.media_disk'))->circular()->imageSize(44)
-                    ->defaultImageUrl(fn (Dish $r) => \App\Support\Media::artUrl($r->image_key ?? $r->category?->image_key))
+                ImageColumn::make('image')->label('')->circular()->imageSize(44)
+                    ->state(fn (Dish $r) => $r->imageUrl('thumb'))
                     ->action(ImagePreview::action(
-                        fn (Dish $r) => $r->image ? \App\Support\Media::url($r->image) : \App\Support\Media::artUrl($r->image_key ?? $r->category?->image_key),
+                        fn (Dish $r) => $r->imageUrl('card'),
                         fn (Dish $r) => $r->name,
                         fn (Dish $r) => \App\Support\Media::artBg($r->image_key ?? $r->category?->image_key),
                     )),

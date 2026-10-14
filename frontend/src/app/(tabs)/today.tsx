@@ -19,6 +19,7 @@ import { flash, NetToast } from '@/components/ui/Toasts';
 import { Txt } from '@/components/ui/Txt';
 import { clock12, clock24, greeting, lastCookedTag, lastShort, longDate, shortDate, time12, todayISO } from '@/lib/dates';
 import { createMeal, MEAL_LABEL, queuedMealCount, removeMeal } from '@/lib/mealQueue';
+import { confirmAction } from '@/components/ui/Confirm';
 import { uuid } from '@/lib/uuid';
 import { useNet } from '@/store/net';
 import { useQueue } from '@/store/queue';
@@ -96,7 +97,7 @@ export default function TodayScreen() {
     } catch (e) {
       if (isNetworkError(e)) return;
       qc.setQueryData(qk.today, prev);
-      flash({ title: errorMessage(e), tone: 'info' });
+      flash({ title: errorMessage(e), tone: 'error' });
     }
   };
 
@@ -120,7 +121,7 @@ export default function TodayScreen() {
       qc.setQueryData(qk.today, next);
     } catch (e) {
       if (status(e) === 429) setToday((t) => ({ ...t, shuffles_left: 0 }));
-      else flash({ title: errorMessage(e), tone: 'info' });
+      else flash({ title: errorMessage(e), tone: 'error' });
     } finally {
       fade.set(withTiming(1, { duration: tokens.motion.shuffleFade }));
       setBusy(false);
@@ -147,7 +148,7 @@ export default function TodayScreen() {
       }));
       if (!res.queued) void refresh();
     } catch (e) {
-      flash({ title: errorMessage(e), tone: 'info' });
+      flash({ title: errorMessage(e), tone: 'error' });
     } finally {
       setBusy(false);
     }
@@ -173,11 +174,25 @@ export default function TodayScreen() {
       const r = await removeMeal(log.id, log.pending);
       if (r === 'deleted') void refresh();
     } catch (e) {
-      flash({ title: errorMessage(e), tone: 'info' });
       void refresh();
+      throw e; // the confirm sheet shows the error toast
     } finally {
       setBusy(false);
     }
+  };
+
+  const askUndoLog = () => {
+    const log = today.log;
+    if (!log || busy) return;
+    void confirmAction({
+      title: `Remove ${log.dish_name} from today?`,
+      message: 'It comes off your history and today goes back to your picks.',
+      confirmLabel: 'Remove meal',
+      icon: 'reset',
+      errorTitle: 'Couldn’t remove the meal',
+      run: undoLog,
+      success: { title: `${log.dish_name} removed`, sub: 'Today is back to your picks.' },
+    });
   };
 
   // ---------------------------------------------------------------- render
@@ -344,7 +359,7 @@ export default function TodayScreen() {
                     accessibilityRole="button"
                     accessibilityLabel={`Switch to ${p.name}`}
                     style={({ pressed }) => [styles.switchRow, { backgroundColor: pressed ? C.surfaceAlt2 : C.white }]}>
-                    <DishImage imageUrl={p.image_url} imageKey={p.image_key} bg={p.image_bg} scale={1} radius={12} style={{ width: 48, height: 48 }} />
+                    <DishImage imageUrl={p.thumb_url ?? p.image_url} imageKey={p.image_key} bg={p.image_bg} scale={1} radius={12} style={{ width: 48, height: 48 }} />
                     <View style={{ flex: 1 }}>
                       <Txt v="body" weight={700} lh={20} numberOfLines={1}>
                         {p.name}
@@ -363,7 +378,7 @@ export default function TodayScreen() {
           </>
         ) : null}
 
-        {stage === 'done' && today.log ? <DoneStage today={today} log={today.log} busy={busy} onUndo={undoLog} /> : null}
+        {stage === 'done' && today.log ? <DoneStage today={today} log={today.log} busy={busy} onUndo={askUndoLog} /> : null}
       </ScrollView>
 
       <NetToast bottom={100} delay={450} offlineSub={queued > 0 ? `${queued} meal${queued === 1 ? '' : 's'} will sync later` : 'Showing this morning’s saved picks'} />
@@ -373,63 +388,93 @@ export default function TodayScreen() {
 
 // ---------------------------------------------------------------- pieces
 
+const STEPS = [
+  { label: 'Pick', hint: 'Choose a dish' },
+  { label: 'Cook', hint: 'Make it today' },
+  { label: 'Log', hint: 'Save to history' },
+] as const;
+
+/** "arslan khan" → "Arslan": the greeting uses a capitalised first name. */
+const firstName = (name: string) => {
+  const first = name.trim().split(/\s+/)[0] ?? '';
+  return first ? first.charAt(0).toUpperCase() + first.slice(1) : '';
+};
+
 function Header({ today }: { today: Today }) {
   const unread = today.unread_notifications;
   // Full name from the signed-in account (Today only carries the first name).
   const fullName = useAuth((s) => s.user?.name) ?? today.greeting_name;
+  const name = firstName(today.greeting_name || fullName);
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-      <Pressable onPress={() => router.navigate('/settings')} accessibilityRole="button" accessibilityLabel="Profile and settings">
-        <Avatar initial={initials(fullName)} />
+    <View style={styles.header}>
+      <Pressable
+        onPress={() => router.navigate('/settings')}
+        accessibilityRole="button"
+        accessibilityLabel="Profile and settings"
+        style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.95 : 1 }] })}>
+        <Avatar initial={initials(fullName)} size={48} fontSize={17} />
       </Pressable>
-      <View style={{ flex: 1, gap: 1 }}>
-        <Txt v="helper" weight={600} color={C.muted}>
+      <View style={{ flex: 1, gap: 2 }}>
+        <Txt v="helper" weight={600} color={C.muted} size={12} style={{ letterSpacing: 0.6, textTransform: 'uppercase' }} numberOfLines={1}>
           {longDate(today.date)}
         </Txt>
-        <Txt v="greeting" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
-          {greeting()}, {today.greeting_name}
+        <Txt v="greeting" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
+          {greeting()}
+          {name ? `, ${name}` : ''}
         </Txt>
       </View>
       <Pressable
         onPress={() => router.push('/notifications')}
         accessibilityRole="button"
         accessibilityLabel={`Notifications, ${unread} unread`}
+        hitSlop={6}
         style={({ pressed }) => [styles.bell, { transform: [{ scale: pressed ? 0.94 : 1 }] }]}>
         <Icon name="bell" size={20} />
-        {unread > 0 ? <View style={styles.bellDot} /> : null}
+        {unread > 0 ? (
+          <View style={styles.bellBadge}>
+            <Txt v="badge" size={10} color={C.white}>
+              {unread > 9 ? '9+' : unread}
+            </Txt>
+          </View>
+        ) : null}
       </Pressable>
     </View>
   );
 }
 
+/** Today's progress as one card: Pick → Cook → Log, with a filled track between the steps. */
 function StepTracker({ stage }: { stage: Stage }) {
   const idx = STEP_INDEX[stage];
   return (
-    <View accessibilityLabel={`Today’s progress: step ${idx + 1} of 3`} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-      {['Pick', 'Cook', 'Log'].map((label, i) => {
+    <View accessibilityRole="progressbar" accessibilityLabel={`Today’s progress: step ${idx + 1} of 3, ${STEPS[idx].label}`} style={styles.progressCard}>
+      {/* track from the first to the last dot centre; the fill grows as steps are done */}
+      <View style={styles.track} pointerEvents="none">
+        <View style={[styles.trackFill, { width: `${idx * 50}%` }]} />
+      </View>
+      {STEPS.map((step, i) => {
         const done = i < idx;
         const cur = i === idx;
         return (
-          <View key={label} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: i < 2 ? 1 : undefined }}>
-            <View style={[styles.stepPill, { backgroundColor: cur ? C.amberSoft : 'transparent' }]}>
-              <View
-                style={[
-                  styles.stepDot,
-                  done ? { backgroundColor: C.primary } : cur ? { backgroundColor: C.accent } : { backgroundColor: C.white, borderWidth: 2, borderColor: C.disabledBg },
-                ]}>
-                {done ? (
-                  <Icon name="check" size={11} color={C.white} strokeWidth={3.6} />
-                ) : (
-                  <Txt v="badge" color={cur ? C.ink : C.faint}>
-                    {i + 1}
-                  </Txt>
-                )}
-              </View>
-              <Txt v="toastTitle" size={13} color={cur ? C.ink : done ? C.primaryPressed : C.faint}>
-                {label}
-              </Txt>
+          <View key={step.label} style={styles.step}>
+            <View
+              style={[
+                styles.stepDot,
+                done ? { backgroundColor: C.primary, borderColor: C.primary } : cur ? { backgroundColor: C.accent, borderColor: C.amberSoft } : null,
+              ]}>
+              {done ? (
+                <Icon name="check" size={13} color={C.white} strokeWidth={3.4} />
+              ) : (
+                <Txt v="badge" size={12} color={cur ? C.ink : C.faint}>
+                  {i + 1}
+                </Txt>
+              )}
             </View>
-            {i < 2 ? <View style={{ flex: 1, minWidth: 8, height: 2, borderRadius: 99, backgroundColor: done ? C.primary : C.disabledBg }} /> : null}
+            <Txt v="toastTitle" size={13} color={cur ? C.ink : done ? C.primaryPressed : C.faint} numberOfLines={1}>
+              {step.label}
+            </Txt>
+            <Txt v="helper" size={11} color={cur ? C.muted : C.faint} numberOfLines={1}>
+              {done ? 'Done' : step.hint}
+            </Txt>
           </View>
         );
       })}
@@ -632,8 +677,44 @@ const styles = StyleSheet.create({
   titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   bell: { width: 46, height: 46, borderRadius: 16, backgroundColor: C.white, borderWidth: 1, borderColor: C.borderSoft, alignItems: 'center', justifyContent: 'center' },
   bellDot: { position: 'absolute', top: 11, right: 12, width: 8, height: 8, borderRadius: 4, backgroundColor: C.notify, borderWidth: 2, borderColor: C.white },
-  stepPill: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 30, paddingLeft: 4, paddingRight: 10, borderRadius: 99 },
-  stepDot: { width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  bellBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    minWidth: 18,
+    height: 18,
+    paddingHorizontal: 4,
+    borderRadius: 9,
+    backgroundColor: C.notify,
+    borderWidth: 2,
+    borderColor: C.bg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  progressCard: {
+    flexDirection: 'row',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 20,
+    backgroundColor: C.white,
+    borderWidth: 1,
+    borderColor: C.borderSoft,
+  },
+  track: { position: 'absolute', left: '16.66%', right: '16.66%', top: 25, height: 3, borderRadius: 99, backgroundColor: C.disabledBg },
+  trackFill: { height: 3, borderRadius: 99, backgroundColor: C.primary },
+  step: { flex: 1, alignItems: 'center', gap: 3 },
+  stepDot: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: C.white,
+    borderWidth: 3,
+    borderColor: C.disabledBg,
+    marginBottom: 3,
+  },
   shufflePill: { flexDirection: 'row', alignItems: 'center', gap: 8, height: 46, paddingLeft: 14, paddingRight: 8, borderRadius: 99, flexShrink: 0 },
   shuffleBadge: { minWidth: 28, height: 28, borderRadius: 99, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 },
   weather: { marginTop: -6, height: 44, paddingHorizontal: 6, borderRadius: 14, backgroundColor: C.white, borderWidth: 1, borderColor: C.borderSoft, flexDirection: 'row', alignItems: 'center', gap: 10 },

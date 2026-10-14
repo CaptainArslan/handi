@@ -137,17 +137,16 @@ class DishController extends Controller
 
         $request->validate([
             'photo' => ['required', 'image', 'max:'.config('handi.photo_max_kb', 10240)],
-        ], ['photo.max' => 'Photos can be up to 10 MB.', 'photo.image' => 'Choose a photo (JPG, PNG or WebP).']);
+        ], ['photo.max' => 'Photos can be up to 10 MB.', 'photo.uploaded' => 'That photo is too large to upload. Try a smaller one.', 'photo.image' => 'Choose a photo (JPG, PNG or WebP).']);
 
-        $disk = config('handi.media_disk');
-        $old = $dish->photo_path;
-        $path = $request->file('photo')->storeAs('kitchen-photos/'.$dish->user_id, Str::uuid().'.'.$request->file('photo')->extension(), ['disk' => $disk, 'visibility' => 'public']);
+        // Media library: replaces any earlier photo and makes the thumb/card sizes.
+        $dish->attachPhoto($request->file('photo'));
 
-        $dish->update(['photo_path' => $path, 'photo_status' => PhotoStatus::Ready]);
-
-        if ($old) {
-            Storage::disk($disk)->delete($old);
+        // A photo stored before the media library is no longer needed.
+        if ($dish->photo_path) {
+            Storage::disk(config('handi.media_disk'))->delete($dish->photo_path);
         }
+        $dish->update(['photo_path' => null, 'photo_status' => PhotoStatus::Ready]);
 
         $notifications->notify($request->user(), NotificationType::PhotoReady, 'Photo added',
             'Your photo of '.$dish->effectiveName().' is ready and now shows in suggestions.',

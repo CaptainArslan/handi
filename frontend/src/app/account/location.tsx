@@ -12,7 +12,7 @@ import { Field, Input } from '@/components/ui/Field';
 import { Icon } from '@/components/ui/Icon';
 import { Spinner } from '@/components/ui/Spinner';
 import { DISPLAY, Txt } from '@/components/ui/Txt';
-import { locate } from '@/lib/location';
+import { locate, locateMessage } from '@/lib/location';
 import { C } from '@/theme/tokens';
 
 type Draft = { mode: 'city'; city: City } | { mode: 'gps'; lat: number; lng: number; weather: Weather | null };
@@ -80,9 +80,9 @@ function LocationForm({ me }: { me: Me }) {
     setLocError(null);
     setLocating(true);
     const pos = await locate();
-    if (pos === 'denied' || pos === 'error') {
+    if (typeof pos === 'string') {
       setLocating(false);
-      setLocError(pos === 'denied' ? 'Location permission is off. No problem, choose your city instead.' : 'Couldn’t find you right now. Choose your city instead.');
+      setLocError(locateMessage(pos));
       return;
     }
     let w: Weather | null = null;
@@ -138,10 +138,11 @@ function LocationForm({ me }: { me: Me }) {
         <Txt v="overline" color={C.onGreenMuted}>
           Weather for
         </Txt>
-        <Txt style={{ fontFamily: DISPLAY, fontSize: 26, color: C.white }} numberOfLines={2}>
+        <Txt style={{ fontFamily: DISPLAY, fontSize: 26, color: C.white, paddingRight: 48 }} numberOfLines={2}>
           {title}
         </Txt>
-        <Txt v="bodyS" color={C.onGreenMuted}>
+        {/* keep clear of the decorative sun in the top-right corner */}
+        <Txt v="bodyS" color={C.onGreenMuted} style={{ paddingRight: 72 }}>
           {wxLine}
         </Txt>
       </View>

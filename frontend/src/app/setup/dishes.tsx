@@ -139,7 +139,7 @@ export default function SetupDishes() {
               <DishPill
                 width={itemW}
                 name={item.dish.name}
-                imageUrl={item.dish.image_url}
+                imageUrl={item.dish.thumb_url ?? item.dish.image_url}
                 imageKey={item.dish.image_key}
                 bg={item.dish.image_bg}
                 selected={dishIds.includes(item.dish.id)}

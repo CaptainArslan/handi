@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 
-import { api } from './client';
+import { api, postMultipart } from './client';
 import type {
   AppNotification,
   Budget,
@@ -11,6 +11,7 @@ import type {
   Kitchen,
   KitchenDish,
   KitchenDishDetail,
+  ImagePromptSettings,
   LegalDoc,
   LibraryDish,
   MealLog,
@@ -93,8 +94,6 @@ async function customDishForm(input: CustomDishInput): Promise<FormData> {
   return form;
 }
 
-const multipart = { headers: { 'Content-Type': 'multipart/form-data' }, timeout: 60000 };
-
 export const endpoints = {
   // ---------------------------------------------------------------- Public
   libraryDishes: (params?: { q?: string; category?: string }) => d<LibraryDish[]>(api.get('/library/dishes', { params })),
@@ -102,6 +101,7 @@ export const endpoints = {
   cities: (q?: string) => d<CitiesResponse>(api.get('/cities', { params: q ? { q } : undefined })),
   weather: (params: { city_id?: number; lat?: number; lng?: number }) => d<Weather>(api.get('/weather', { params })),
   legal: (doc: 'terms' | 'privacy') => d<LegalDoc>(api.get(`/legal/${doc}`)),
+  imagePrompt: () => d<ImagePromptSettings>(api.get('/image-prompt')),
   previewPicks: (body: { dish_ids: number[]; location: LocationInput | null; family_size?: number; budget?: Budget | null; repeat_gap_days?: number; meals?: MealType[] }) =>
     d<{ date: string; weather: Weather | null; picks: PreviewPick[] }>(api.post('/preview-picks', body)),
 
@@ -152,7 +152,7 @@ export const endpoints = {
   uploadDishPhoto: async (id: number, photo: PhotoInput) => {
     const form = new FormData();
     form.append('photo', await filePart(photo));
-    return d<KitchenDishDetail>(api.post(`/me/dishes/${id}/photo`, form, multipart));
+    return postMultipart<Data<KitchenDishDetail>>(`/me/dishes/${id}/photo`, form).then((r) => r.data);
   },
   removeDish: (id: number) => api.delete(`/me/dishes/${id}`),
   restoreDish: (id: number) => d<KitchenDishDetail>(api.post(`/me/dishes/${id}/restore`)),
@@ -160,7 +160,7 @@ export const endpoints = {
   customDishes: () => d<KitchenDish[]>(api.get('/me/custom-dishes')),
   createCustomDish: async (input: CustomDishInput) =>
     input.photo
-      ? d<KitchenDishDetail>(api.post('/me/custom-dishes', await customDishForm(input), multipart))
+      ? postMultipart<Data<KitchenDishDetail>>('/me/custom-dishes', await customDishForm(input)).then((r) => r.data)
       : d<KitchenDishDetail>(api.post('/me/custom-dishes', { ...input, photo: undefined })),
   updateCustomDish: async (id: number, input: CustomDishInput) => {
     const dish = await d<KitchenDishDetail>(api.patch(`/me/custom-dishes/${id}`, { ...input, photo: undefined }));

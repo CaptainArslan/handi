@@ -4230,6 +4230,29 @@
                     }
                 }
             }
+        },
+        "/v1/health": {
+            "get": {
+                "operationId": "v1.health",
+                "description": "Public, no token. Answers **200** when the API and everything it depends on works, **503** when a\ncheck fails, so it can be used by the app, uptime monitors and load balancers alike.\nChecks: database (query + seeded catalog), cache (write/read) and photo storage (write).\nNever exposes secrets: only `ok` / `fail` and timings per check (error text only when `APP_DEBUG` is on).",
+                "summary": "API health check",
+                "tags": [
+                    "Health"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": []
+            }
         }
     },
     "components": {

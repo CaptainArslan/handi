@@ -1,0 +1,235 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Opening Today — daily picks request",
+    "output": "handi-today-sequence.html",
+    "viewBox": [
+      930,
+      600
+    ],
+    "column_fit": "spread",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    {
+      "id": "user",
+      "type": "external",
+      "label": "User",
+      "sublabel": "phone"
+    },
+    {
+      "id": "app",
+      "type": "frontend",
+      "label": "Handi app",
+      "sublabel": "Today screen"
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "Laravel API",
+      "sublabel": "TodayController"
+    },
+    {
+      "id": "auth",
+      "type": "security",
+      "label": "Sanctum",
+      "sublabel": "token guard"
+    },
+    {
+      "id": "picks",
+      "type": "backend",
+      "label": "PickService",
+      "sublabel": "rules"
+    },
+    {
+      "id": "weather",
+      "type": "external",
+      "label": "Open-Meteo",
+      "sublabel": "via WeatherService"
+    },
+    {
+      "id": "db",
+      "type": "database",
+      "label": "MySQL",
+      "sublabel": "kitchen + history"
+    }
+  ],
+  "segments": [
+    {
+      "from": 150,
+      "to": 228,
+      "label": "Request"
+    },
+    {
+      "from": 238,
+      "to": 398,
+      "label": "First open of the day"
+    },
+    {
+      "from": 408,
+      "to": 484,
+      "label": "Response"
+    }
+  ],
+  "messages": [
+    {
+      "id": "open-today",
+      "from": "user",
+      "to": "app",
+      "y": 160,
+      "label": "open Today"
+    },
+    {
+      "id": "get-today",
+      "from": "app",
+      "to": "api",
+      "y": 188,
+      "label": "GET /me/today",
+      "variant": "emphasis"
+    },
+    {
+      "id": "check-token",
+      "from": "api",
+      "to": "auth",
+      "y": 216,
+      "label": "Bearer token → user",
+      "variant": "security"
+    },
+    {
+      "id": "ask-picks",
+      "from": "api",
+      "to": "picks",
+      "y": 246,
+      "label": "today(user)"
+    },
+    {
+      "id": "read-saved",
+      "from": "picks",
+      "to": "db",
+      "y": 274,
+      "label": "daily_picks for today? (none yet)"
+    },
+    {
+      "id": "get-weather",
+      "from": "picks",
+      "to": "weather",
+      "y": 302,
+      "label": "forecast (cache ~1 km, 60 min)",
+      "variant": "dashed"
+    },
+    {
+      "id": "weather-back",
+      "from": "weather",
+      "to": "picks",
+      "y": 330,
+      "label": "hot / mild / cold / rainy",
+      "variant": "return"
+    },
+    {
+      "id": "read-kitchen",
+      "from": "picks",
+      "to": "db",
+      "y": 360,
+      "label": "dishes + last cooked"
+    },
+    {
+      "id": "save-picks",
+      "from": "picks",
+      "to": "db",
+      "y": 388,
+      "label": "save 3 picks",
+      "variant": "emphasis"
+    },
+    {
+      "id": "picks-back",
+      "from": "picks",
+      "to": "api",
+      "y": 418,
+      "label": "DailyPick",
+      "variant": "return"
+    },
+    {
+      "id": "today-json",
+      "from": "api",
+      "to": "app",
+      "y": 446,
+      "label": "200 picks + weather",
+      "variant": "return"
+    },
+    {
+      "id": "render",
+      "from": "app",
+      "to": "user",
+      "y": 474,
+      "label": "3 dishes",
+      "variant": "return"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "app",
+      "from": 183,
+      "to": 480,
+      "type": "frontend"
+    },
+    {
+      "participant": "api",
+      "from": 188,
+      "to": 452,
+      "type": "backend"
+    },
+    {
+      "participant": "auth",
+      "from": 211,
+      "to": 224,
+      "type": "security"
+    },
+    {
+      "participant": "picks",
+      "from": 241,
+      "to": 424,
+      "type": "backend"
+    },
+    {
+      "participant": "weather",
+      "from": 297,
+      "to": 336,
+      "type": "external"
+    },
+    {
+      "participant": "db",
+      "from": 269,
+      "to": 394,
+      "type": "database"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Pick rules",
+      "items": [
+        "Fits today’s weather (or “any”)",
+        "Not cooked within the repeat gap (3/5/7/10 days)",
+        "3 different categories; budget and meals respected"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Same day",
+      "items": [
+        "Later opens read the saved daily_picks row",
+        "Shuffle makes a new set (5 per day, then 429)",
+        "“Cook this today” stores the plan on the same row"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Offline",
+      "items": [
+        "The app shows the cached picks from this morning",
+        "Meals logged offline sync later via POST /me/sync"
+      ]
+    }
+  ]
+}

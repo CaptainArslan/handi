@@ -13,6 +13,7 @@ import { AppHeader, useBottom } from '@/components/Layout';
 import { LoadError, Loading } from '@/components/LoadState';
 import { IconButton } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
+import { confirmAction } from '@/components/ui/Confirm';
 import { flash, Snackbar } from '@/components/ui/Toasts';
 import { Txt } from '@/components/ui/Txt';
 import { clock12, dayMonth, daysBetween, time12, todayISO, weekday } from '@/lib/dates';
@@ -74,7 +75,7 @@ export default function NotificationsScreen() {
     try {
       await endpoints.readAllNotifications();
     } catch (e) {
-      flash({ title: 'Couldn’t mark all as read', sub: errorMessage(e), tone: 'info' });
+      flash({ title: 'Couldn’t mark all as read', sub: errorMessage(e), tone: 'error' });
     }
     refresh();
   };
@@ -90,10 +91,22 @@ export default function NotificationsScreen() {
       await endpoints.clearNotification(n.id);
     } catch (e) {
       setLast(null);
-      flash({ title: 'Couldn’t clear the notification', sub: errorMessage(e), tone: 'info' });
       refresh();
+      throw e; // the confirm sheet shows the error toast
     }
   };
+
+  const askClear = (n: AppNotification) =>
+    confirmAction({
+      title: 'Clear this notification?',
+      message: n.title,
+      confirmLabel: 'Clear',
+      errorTitle: 'Couldn’t clear the notification',
+      run: async () => {
+        await clear(n);
+        return false; // the Undo bar is the success message
+      },
+    });
 
   const undo = async () => {
     const l = last;
@@ -108,7 +121,7 @@ export default function NotificationsScreen() {
     try {
       await endpoints.restoreNotification(l.item.id);
     } catch (e) {
-      flash({ title: 'Couldn’t restore the notification', sub: errorMessage(e), tone: 'info' });
+      flash({ title: 'Couldn’t restore the notification', sub: errorMessage(e), tone: 'error' });
     }
     refresh();
   };
@@ -208,7 +221,7 @@ export default function NotificationsScreen() {
                 {g.title}
               </Txt>
               {g.items.map((n, i) => (
-                <Item key={n.id} n={n} index={i} onOpen={() => open(n)} onClear={() => clear(n)} />
+                <Item key={n.id} n={n} index={i} onOpen={() => open(n)} onClear={() => void askClear(n)} />
               ))}
             </View>
           ))

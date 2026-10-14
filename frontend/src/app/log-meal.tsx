@@ -26,7 +26,7 @@ import { useQueue } from '@/store/queue';
 import { C } from '@/theme/tokens';
 import { WebPickerInput } from '@/components/WebPickerInput';
 
-type Picked = Pick<KitchenDish, 'id' | 'name' | 'image_url' | 'image_key' | 'image_bg'>;
+type Picked = Pick<KitchenDish, 'id' | 'name' | 'image_url' | 'thumb_url' | 'image_key' | 'image_bg'>;
 
 const MEAL_OPTIONS: { value: MealType; label: string }[] = [
   { value: 'breakfast', label: 'Breakfast' },
@@ -217,7 +217,7 @@ export default function LogMealScreen() {
             </Txt>
             {dish ? (
               <View style={styles.picked}>
-                <DishImage imageUrl={dish.image_url} imageKey={dish.image_key} bg={dish.image_bg} scale={1} radius={14} style={{ width: 52, height: 52 }} />
+                <DishImage imageUrl={dish.thumb_url ?? dish.image_url} imageKey={dish.image_key} bg={dish.image_bg} scale={1} radius={14} style={{ width: 52, height: 52 }} />
                 <Txt v="itemTitle" color={C.primaryPressed} style={{ flex: 1 }} numberOfLines={2}>
                   {dish.name}
                 </Txt>
@@ -262,7 +262,7 @@ export default function LogMealScreen() {
                       accessibilityRole="button"
                       accessibilityLabel={`${d.name}, ${d.category?.name ?? ''}`}
                       style={({ pressed }) => [styles.option, i < options.length - 1 || noMatch ? styles.optionLine : null, pressed ? { backgroundColor: C.surfaceAlt } : null]}>
-                      <DishImage imageUrl={d.image_url} imageKey={d.image_key} bg={d.image_bg} scale={1} radius={12} style={{ width: 42, height: 42 }} />
+                      <DishImage imageUrl={d.thumb_url ?? d.image_url} imageKey={d.image_key} bg={d.image_bg} scale={1} radius={12} style={{ width: 42, height: 42 }} />
                       <Txt v="body" weight={600} style={{ flex: 1 }} numberOfLines={1}>
                         {d.name}
                       </Txt>

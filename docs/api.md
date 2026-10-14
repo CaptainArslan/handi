@@ -37,11 +37,13 @@ the Postman collection [`handi-api.postman_collection.json`](handi-api.postman_c
 
 | Group | Method | Path | What |
 |---|---|---|---|
+| Health | `GET` | `/api/v1/health` | API health check |
 | Public catalog | `GET` | `/api/v1/library/dishes` | Dish library |
 | Public catalog | `GET` | `/api/v1/categories` | Categories |
 | Public catalog | `GET` | `/api/v1/cities` | Cities |
 | Public catalog | `GET` | `/api/v1/weather` | Weather |
 | Public catalog | `GET` | `/api/v1/legal/{document}` | Terms or privacy policy |
+| Public catalog | `GET` | `/api/v1/image-prompt` | AI photo prompt (JSON spec users copy into Gemini; admin-edited) |
 | Public catalog | `POST` | `/api/v1/preview-picks` | Preview today’s picks |
 | Auth | `POST` | `/api/v1/auth/register` | Sign up |
 | Auth | `POST` | `/api/v1/auth/login` | Log in |
@@ -91,6 +93,39 @@ the Postman collection [`handi-api.postman_collection.json`](handi-api.postman_c
 | Notifications | `GET` | `/api/v1/me/notification-settings` | Notification settings |
 | Notifications | `PUT` | `/api/v1/me/notification-settings` | Update notification settings |
 | Notifications | `POST` | `/api/v1/me/notification-settings/test` | Send a test notification |
+
+## Health
+
+### API health check
+
+`GET /api/v1/health` · no token
+
+Is the API up and working? Checks the database (and that the catalog is seeded), the cache and photo storage. Answers **200** when everything passes and **503** when any check fails, so the app, uptime monitors and load balancers can all use it. It never returns secrets; error text appears only when `APP_DEBUG=true`.
+
+```bash
+curl http://localhost:8000/api/v1/health
+```
+
+**200**
+
+```json
+{
+  "status": "ok",
+  "app": "Handi",
+  "version": "1.0.0",
+  "environment": "local",
+  "time": "2026-10-14T16:01:18+00:00",
+  "checks": {
+    "database": { "status": "ok", "ms": 3.3, "categories": 9, "library_dishes": 42 },
+    "cache": { "status": "ok", "ms": 4.2 },
+    "storage": { "status": "ok", "ms": 12.3 }
+  }
+}
+```
+
+**503**: same shape with `"status": "degraded"` and the failing check as `"status": "fail"`.
+
+Laravel's plain `/up` route still exists for a bare "is PHP running" check.
 
 ## Public catalog
 
@@ -3127,4 +3162,14 @@ POST /api/v1/me/notification-settings/test
     "devices": 1
   }
 }
+```
+
+## AI photo prompt
+
+`GET /api/v1/image-prompt` · public
+
+The illustration spec shown under **Add a photo**. The app replaces every `placeholder` in `intro` and `template` with the dish name (JSON-escaped inside the template), copies the result, and offers a link to `ai_url`. Admins edit it in **Dish library → AI photo prompt**; `enabled: false` hides the helper in the app.
+
+```json
+{ "data": { "enabled": true, "placeholder": "{{dish_name}}", "intro": "Create one square image of {{dish_name}} …", "template": "{\n    \"metadata\": { \"dish_name\": \"{{dish_name}}\" … } }", "ai_name": "Gemini", "ai_url": "https://gemini.google.com/app", "updated_at": null } }
 ```

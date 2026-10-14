@@ -8,6 +8,7 @@ import { fieldErrors, errorMessage } from '@/api/client';
 import { endpoints } from '@/api/endpoints';
 import { qk, useDish, useDishes } from '@/api/queries';
 import type { Cost, Effort, KitchenDishDetail, UsualMeal, WeatherTag } from '@/api/types';
+import { AiPhotoHelper } from '@/components/AiPhotoHelper';
 import { goBack } from '@/components/AuthKit';
 import { CATEGORY_ART, DishImage } from '@/components/DishImage';
 import { WeatherChips } from '@/components/Kitchen';
@@ -199,7 +200,7 @@ function DishForm({ editing, initialName }: { editing: KitchenDishDetail | null;
         setServerNameError(errs.name);
         setTouched(true);
       } else {
-        flash({ title: 'Couldn’t save your dish', sub: errs.category ?? errs.weather ?? errs.photo ?? errorMessage(e), tone: 'info' });
+        flash({ title: 'Couldn’t save your dish', sub: errs.category ?? errs.weather ?? errs.photo ?? errorMessage(e), tone: 'error' });
       }
     } finally {
       setSaving(false);
@@ -245,6 +246,30 @@ function DishForm({ editing, initialName }: { editing: KitchenDishDetail | null;
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingTop: 6, paddingHorizontal: 20, paddingBottom: 20, gap: 20 }}>
+          <Field
+            label="Dish name"
+            labelRight={
+              <Txt v="caption" color={C.muted}>
+                {`${form.name.length}/40`}
+              </Txt>
+            }
+            error={showName ? nameErr : null}>
+            <Input
+              value={form.name}
+              onChangeText={(t) => {
+                set({ name: t.slice(0, 40) });
+                setServerNameError(null);
+              }}
+              onBlur={() => setTouched(true)}
+              maxLength={40}
+              placeholder="e.g. Aunt Sara’s Haleem"
+              accessibilityLabel="Dish name"
+              autoCapitalize="words"
+              returnKeyType="done"
+              state={showName ? 'bad' : 'default'}
+            />
+          </Field>
+
           {photo ? (
             <View style={styles.photoBox}>
               <DishImage source={photo.uri} bg={tokens.dishBg.karhi} scale={1.1} alt="Selected dish photo" style={StyleSheet.absoluteFill} />
@@ -286,29 +311,7 @@ function DishForm({ editing, initialName }: { editing: KitchenDishDetail | null;
             </Pressable>
           )}
 
-          <Field
-            label="Dish name"
-            labelRight={
-              <Txt v="caption" color={C.muted}>
-                {`${form.name.length}/40`}
-              </Txt>
-            }
-            error={showName ? nameErr : null}>
-            <Input
-              value={form.name}
-              onChangeText={(t) => {
-                set({ name: t.slice(0, 40) });
-                setServerNameError(null);
-              }}
-              onBlur={() => setTouched(true)}
-              maxLength={40}
-              placeholder="e.g. Aunt Sara’s Haleem"
-              accessibilityLabel="Dish name"
-              autoCapitalize="words"
-              returnKeyType="done"
-              state={showName ? 'bad' : 'default'}
-            />
-          </Field>
+          {!photo ? <AiPhotoHelper dishName={form.name} onUpload={() => setChoiceOpen(true)} /> : null}
 
           <View style={{ gap: 10 }}>
             <Txt v="label">Category</Txt>

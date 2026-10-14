@@ -39,6 +39,8 @@ export interface LibraryDish {
   category: CategoryRef | null;
   note: string | null;
   image_url: string | null;
+  /** 240×240 WebP for lists and small tiles (falls back to image_url). */
+  thumb_url?: string | null;
   image_key: string | null;
   image_bg: string;
   default_weather: WeatherTag[];
@@ -104,6 +106,8 @@ export interface KitchenDish {
   category: CategoryRef | null;
   is_custom: boolean;
   image_url: string | null;
+  /** 240×240 WebP for lists and small tiles (falls back to image_url). */
+  thumb_url?: string | null;
   image_key: string | null;
   image_bg: string;
   weather: WeatherTag[];
@@ -136,6 +140,8 @@ export interface MealLog {
   dish_name: string;
   category_key: string | null;
   image_url: string | null;
+  /** 240×240 WebP for lists and small tiles (falls back to image_url). */
+  thumb_url?: string | null;
   image_key: string | null;
   image_bg: string;
   date: string;
@@ -196,6 +202,18 @@ export interface AppNotification {
 export interface NotificationSettings {
   enabled: boolean;
   time: string;
+}
+
+/** GET /image-prompt — the AI photo prompt users copy into Gemini (edited in the admin). */
+export interface ImagePromptSettings {
+  enabled: boolean;
+  /** Replace every occurrence with the dish name. */
+  placeholder: string;
+  intro: string;
+  template: string;
+  ai_name: string;
+  ai_url: string;
+  updated_at: string | null;
 }
 
 export interface LegalDoc {

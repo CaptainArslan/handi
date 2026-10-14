@@ -41,7 +41,8 @@ class KitchenDishResource extends JsonResource
             'name' => $this->effectiveName(),
             'category' => $category ? ['key' => $category->key, 'name' => $category->name] : null,
             'is_custom' => $this->is_custom,
-            'image_url' => $this->imageUrl(),
+            'image_url' => $this->imageUrl('card'),
+            'thumb_url' => $this->imageUrl('thumb'),
             'image_key' => $imageKey,
             'image_bg' => Media::artBg($imageKey),
             'weather' => $this->effectiveWeather(),
@@ -68,7 +69,7 @@ class KitchenDishResource extends JsonResource
                 ],
                 'next_eligible_at' => $next && $next->greaterThan($today) ? $next->toDateString() : null,
                 'photo_status' => $this->photo_status?->value,
-                'has_photo' => $this->photo_path !== null,
+                'has_photo' => $this->hasOwnPhoto(),
             ];
         }
 

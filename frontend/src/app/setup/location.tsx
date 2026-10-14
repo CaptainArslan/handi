@@ -10,7 +10,7 @@ import { FormScroll, Heading, SetupHeader, Spacer } from '@/components/Layout';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { Txt } from '@/components/ui/Txt';
-import { locate } from '@/lib/location';
+import { locate, locateMessage, openAppSettings, type LocateFailure } from '@/lib/location';
 import { useOnboarding } from '@/store/onboarding';
 import { C } from '@/theme/tokens';
 
@@ -20,14 +20,15 @@ export default function SetupLocation() {
   const location = useOnboarding((s) => s.location);
   const set = useOnboarding((s) => s.set);
   const [busy, setBusy] = useState(false);
-  const [denied, setDenied] = useState(false);
+  const [failure, setFailure] = useState<LocateFailure | null>(null);
+  const denied = failure !== null;
   const mode: Mode = busy ? 'locating' : location ? 'done' : denied ? 'denied' : 'ask';
 
   const findMe = async () => {
     setBusy(true);
     const pos = await locate();
-    if (pos === 'denied' || pos === 'error') {
-      setDenied(true);
+    if (typeof pos === 'string') {
+      setFailure(pos);
       setBusy(false);
       return;
     }
@@ -41,7 +42,7 @@ export default function SetupLocation() {
     set({
       location: { mode: 'gps', lat: pos.lat, lng: pos.lng, label: city ? `${city} · near you` : 'Near you', city: city ?? undefined, weather },
     });
-    setDenied(false);
+    setFailure(null);
     setBusy(false);
   };
 
@@ -57,7 +58,7 @@ export default function SetupLocation() {
         sub="Hot day, light food. Rainy day, pakoras. We round your location to about 1 km and never share it."
       />
 
-      {mode === 'denied' ? <InlineAlert>Location permission is off. No problem, choose your city instead. It works just as well.</InlineAlert> : null}
+      {mode === 'denied' && failure ? <InlineAlert>{locateMessage(failure)}</InlineAlert> : null}
 
       {mode === 'done' && location ? (
         <View style={styles.located} accessibilityRole="summary" accessibilityLiveRegion="polite">
@@ -86,9 +87,9 @@ export default function SetupLocation() {
       ) : (
         <View style={{ gap: 12 }}>
           <BusyButton
-            label={mode === 'locating' ? 'Finding you…' : mode === 'denied' ? 'Try location again' : 'Use my location'}
+            label={mode === 'locating' ? 'Finding you…' : failure === 'blocked' ? 'Open Settings' : mode === 'denied' ? 'Try location again' : 'Use my location'}
             busy={mode === 'locating'}
-            onPress={findMe}
+            onPress={failure === 'blocked' ? openAppSettings : findMe}
           />
           <Button label="Choose city instead" weight={600} variant={mode === 'denied' ? 'primary' : 'outline'} onPress={() => router.push('/setup/city')} />
         </View>

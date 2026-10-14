@@ -115,7 +115,7 @@ function SettingsForm({ saved, onBack }: { saved: NotificationSettings; onBack: 
     } catch (e) {
       const errs = fieldErrors(e);
       if (errs.time) setServerError(errs.time);
-      else flash({ title: 'Couldn’t save your reminder', sub: errorMessage(e), tone: 'info' });
+      else flash({ title: 'Couldn’t save your reminder', sub: errorMessage(e), tone: 'error' });
     } finally {
       setSaving(false);
     }
@@ -128,7 +128,7 @@ function SettingsForm({ saved, onBack }: { saved: NotificationSettings; onBack: 
       setBanner(true);
       later(() => setBanner(false), 3200);
     } catch (e) {
-      flash({ title: 'Couldn’t send a test', sub: errorMessage(e), tone: 'info' });
+      flash({ title: 'Couldn’t send a test', sub: errorMessage(e), tone: 'error' });
     } finally {
       setTesting(false);
     }

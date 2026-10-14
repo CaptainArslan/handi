@@ -297,3 +297,8 @@
 .handi-profile-activity-title { font-weight: 600; font-size: .92rem; }
 .handi-profile-activity-time { color: var(--handi-muted); font-size: .82rem; }
 .handi-profile-activity-empty { color: var(--handi-muted); font-size: .9rem; padding: .4rem 0; }
+
+/* AI photo prompt preview (Dish library → AI photo prompt) */
+.handi-prompt-preview { border: 1px solid #ECE6D8; border-radius: 12px; background: #FAF9F0; padding: 12px; }
+.handi-prompt-preview-title { font-size: 12px; font-weight: 600; color: #6B6A63; margin: 0 0 8px; }
+.handi-prompt-preview pre { margin: 0; max-height: 320px; overflow: auto; font-size: 11px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; color: #2B2A29; }

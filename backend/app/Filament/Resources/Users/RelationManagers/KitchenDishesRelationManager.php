@@ -35,8 +35,8 @@ class KitchenDishesRelationManager extends RelationManager
             ->modifyQueryUsing(fn (Builder $query) => $query->with(['dish.category', 'ownCategory']))
             ->defaultSort('id', 'desc')
             ->columns([
-                ImageColumn::make('photo')->label('')->state(fn (KitchenDish $r) => $r->imageUrl())->circular()->imageSize(44)
-                    ->action(ImagePreview::action(fn (KitchenDish $r) => $r->imageUrl(), fn (KitchenDish $r) => $r->effectiveName(), fn (KitchenDish $r) => \App\Support\Media::artBg($r->imageKey()))),
+                ImageColumn::make('photo')->label('')->state(fn (KitchenDish $r) => $r->imageUrl('thumb'))->circular()->imageSize(44)
+                    ->action(ImagePreview::action(fn (KitchenDish $r) => $r->imageUrl('card'), fn (KitchenDish $r) => $r->effectiveName(), fn (KitchenDish $r) => \App\Support\Media::artBg($r->imageKey()))),
                 TextColumn::make('name')->label('Dish')->weight('semibold')->state(fn (KitchenDish $r) => $r->effectiveName())
                     ->description(fn (KitchenDish $r) => $r->effectiveCategory()?->name)
                     ->searchable(query: fn (Builder $q, string $s) => $q->where(fn ($q) => $q->where('name', 'like', "%{$s}%")->orWhereHas('dish', fn ($d) => $d->where('name', 'like', "%{$s}%")))),

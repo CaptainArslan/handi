@@ -8,6 +8,7 @@ import { StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { ConfirmHost } from '@/components/ui/Confirm';
 import { FlashHost } from '@/components/ui/Toasts';
 import { APP_MAX_WIDTH, isWeb } from '@/lib/layout';
 import { linkToHref } from '@/lib/links';
@@ -36,7 +37,7 @@ export default function RootLayout() {
   const [queueReady, setQueueReady] = useState(() => useQueue.persist.hasHydrated());
   const ready = (fontsLoaded || !!fontError) && hydrated;
   const segments = useSegments();
-  const first = segments[0] ?? '';
+  const first: string = segments[0] ?? '';
 
   useEffect(() => {
     useAuth.getState().hydrate();
@@ -87,6 +88,7 @@ export default function RootLayout() {
         <Stack.Screen name="add-dish" options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="log-meal" options={{ animation: 'slide_from_bottom' }} />
       </Stack>
+      <ConfirmHost />
       <FlashHost />
     </>
   );

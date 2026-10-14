@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Handi app — frontend architecture",
+    "output": "handi-frontend.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    { "id": "screens", "type": "frontend", "label": "Screens", "sublabel": "Expo Router · src/app", "pos": [40, 300], "size": [170, 64] },
+    { "id": "queries", "type": "frontend", "label": "Data hooks", "sublabel": "React Query · api/queries", "pos": [380, 300], "size": [180, 64] },
+    { "id": "client", "type": "frontend", "label": "API client", "sublabel": "axios + fetch · api/client", "pos": [730, 300], "size": [180, 64] },
+    { "id": "api", "type": "backend", "label": "Laravel API", "sublabel": "/api/v1", "pos": [1080, 300], "size": [160, 64] },
+    { "id": "stores", "type": "frontend", "label": "App state", "sublabel": "zustand · auth · onboarding · ui", "pos": [30, 110], "size": [190, 64] },
+    { "id": "persist", "type": "database", "label": "Query cache", "sublabel": "AsyncStorage · 7 days", "pos": [385, 110], "size": [170, 64] },
+    { "id": "secure", "type": "security", "label": "Session token", "sublabel": "SecureStore (web: storage)", "pos": [730, 110], "size": [180, 64] },
+    { "id": "native", "type": "cloud", "label": "Device APIs", "sublabel": "location · camera · push · video", "pos": [30, 500], "size": [190, 64] },
+    { "id": "net", "type": "frontend", "label": "Network status", "sublabel": "NetInfo · store/net", "pos": [385, 500], "size": [170, 64] },
+    { "id": "queue", "type": "database", "label": "Offline queue", "sublabel": "meals logged offline", "pos": [735, 500], "size": [170, 64] }
+  ],
+  "connections": [
+    { "id": "screens-queries", "from": "screens", "to": "queries", "label": "useQuery · mutate", "variant": "emphasis" },
+    { "id": "queries-client", "from": "queries", "to": "client", "label": "endpoints.ts" },
+    { "id": "client-api", "from": "client", "to": "api", "label": "HTTPS JSON", "variant": "emphasis" },
+    { "id": "stores-screens", "from": "stores", "to": "screens", "label": "session · draft · flash", "fromSide": "bottom", "toSide": "top" },
+    { "id": "queries-persist", "from": "queries", "to": "persist", "label": "persist + hydrate", "variant": "dashed", "fromSide": "top", "toSide": "bottom" },
+    { "id": "secure-client", "from": "secure", "to": "client", "label": "Bearer token", "variant": "security", "fromSide": "bottom", "toSide": "top" },
+    { "id": "screens-native", "from": "screens", "to": "native", "label": "expo-* modules", "fromSide": "bottom", "toSide": "top" },
+    { "id": "net-queries", "from": "net", "to": "queries", "label": "online / offline", "variant": "dashed", "fromSide": "top", "toSide": "bottom" },
+    { "id": "queue-client", "from": "queue", "to": "client", "label": "POST /me/sync", "variant": "dashed", "fromSide": "top", "toSide": "bottom" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Screens", "items": ["Start: splash video, welcome, no-connection", "Setup → sign up: location, family, preferences, dishes, preview", "Tabs: Today · Dishes · History · Settings"] },
+    { "dot": "emerald", "title": "Data", "items": ["React Query is the single source of server data", "Optimistic updates with Undo for deletes", "Confirm sheet + toasts for every destructive action"] },
+    { "dot": "violet", "title": "Offline", "items": ["Cached screens open instantly without internet", "Meals logged offline get a UUID and sync later", "5-second offline toast, back-online toast"] },
+    { "dot": "amber", "title": "Config", "items": ["One setting: EXPO_PUBLIC_API_BASE_URL", "Photos resized to 1600 px / JPEG 0.82 before upload", "Design tokens in theme/tokens.ts, Poppins font"] }
+  ]
+}

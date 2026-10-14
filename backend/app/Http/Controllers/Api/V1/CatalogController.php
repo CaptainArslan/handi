@@ -12,6 +12,7 @@ use App\Models\Dish;
 use App\Models\Province;
 use App\Services\WeatherService;
 use App\Support\CatalogCache;
+use App\Support\ImagePrompt;
 use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -125,5 +126,29 @@ class CatalogController extends Controller
         abort_unless(in_array($document, ['terms', 'privacy'], true), 404, 'Not found.');
 
         return response()->json(['data' => config('legal.'.$document) + ['updated_at' => config('legal.updated_at'), 'support_email' => config('handi.support_email')]]);
+    }
+
+    /**
+     * AI photo prompt
+     *
+     * The JSON illustration spec users copy into Gemini (or another image AI) to make a dish photo
+     * in the app's house style. Replace every `placeholder` in `intro` and `template` with the dish name.
+     * Edited by admins under Dish library → AI photo prompt.
+     *
+     * @unauthenticated
+     */
+    public function imagePrompt(): JsonResponse
+    {
+        $s = ImagePrompt::get();
+
+        return response()->json(['data' => [
+            'enabled' => $s['enabled'],
+            'placeholder' => ImagePrompt::PLACEHOLDER,
+            'intro' => $s['intro'],
+            'template' => $s['template'],
+            'ai_name' => $s['ai_name'],
+            'ai_url' => $s['ai_url'],
+            'updated_at' => \App\Models\Setting::updatedAt(ImagePrompt::KEY),
+        ]]);
     }
 }

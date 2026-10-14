@@ -60,6 +60,9 @@ const ICONS = {
   send: [<Path key="a" d="M22 2L11 13M22 2l-7 20-4-9-9-4z" />],
   shieldCheck: [<Path key="a" d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z" />, <Path key="b" d="M9 12l2 2 4-4" />],
   wifi: [<Path key="a" d="M5 12.6a10 10 0 0 1 14 0M8.5 16.1a5 5 0 0 1 7 0M2 8.8a15 15 0 0 1 20 0M12 20h.01" />],
+  copy: [<Rect key="a" x={9} y={9} width={12} height={12} rx={2} />, <Path key="b" d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" />],
+  sparkles: [<Path key="a" d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z" />, <Path key="b" d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z" />],
+  external: [<Path key="a" d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" />],
   wifiOff: [
     <Path key="a" d="M2 2l20 20M8.5 16.5a5 5 0 0 1 7 0M5 12.9a10 10 0 0 1 5.2-2.8M19 12.9a10 10 0 0 0-2.3-1.6M2 8.8a15 15 0 0 1 4.2-2.6M22 8.8A15 15 0 0 0 10.7 5M12 20h.01" />,
   ],

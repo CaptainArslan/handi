@@ -12,6 +12,7 @@ import { useTop } from '@/components/Layout';
 import { Button, Fab } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { Spinner } from '@/components/ui/Spinner';
+import { confirmAction } from '@/components/ui/Confirm';
 import { flash, NetToast, Snackbar } from '@/components/ui/Toasts';
 import { Txt } from '@/components/ui/Txt';
 import { dayTitle, monthName, monthTitle, pad, parseISO, todayISO } from '@/lib/dates';
@@ -96,10 +97,22 @@ export default function HistoryScreen() {
         void qc.invalidateQueries({ queryKey: qk.today });
       }
     } catch (e) {
-      flash({ title: errorMessage(e), tone: 'info' });
       void qc.invalidateQueries({ queryKey: ['meals'] });
+      throw e; // the confirm sheet shows the error toast
     }
   };
+
+  const askRemove = (log: MealLog) =>
+    confirmAction({
+      title: `Delete ${log.dish_name}?`,
+      message: `${MEAL_LABEL[log.meal]} on ${dayTitle(log.date)} will be removed from your history.`,
+      confirmLabel: 'Delete meal',
+      errorTitle: 'Couldn’t delete the meal',
+      run: async () => {
+        await remove(log);
+        return false; // the Undo bar below is the success message
+      },
+    });
 
   const undo = async () => {
     const r = removed;
@@ -122,7 +135,7 @@ export default function HistoryScreen() {
     try {
       await endpoints.restoreMeal(r.log.id);
     } catch (e) {
-      flash({ title: errorMessage(e), tone: 'info' });
+      flash({ title: 'Couldn’t bring the meal back', sub: errorMessage(e), tone: 'error' });
     } finally {
       void qc.invalidateQueries({ queryKey: ['meals'] });
       void qc.invalidateQueries({ queryKey: qk.today });
@@ -216,7 +229,7 @@ export default function HistoryScreen() {
               </Txt>
             </View>
           ) : (
-            entries.map((log) => <EntryRow key={log.id} log={log} onDelete={() => remove(log)} />)
+            entries.map((log) => <EntryRow key={log.id} log={log} onDelete={() => void askRemove(log)} />)
           )}
         </View>
       </ScrollView>
@@ -246,7 +259,7 @@ function EntryRow({ log, onDelete }: { log: MealLog; onDelete: () => void }) {
   const meal = MEAL_LABEL[log.meal];
   return (
     <View style={styles.entry}>
-      <DishImage imageUrl={log.image_url} imageKey={log.image_key} bg={log.image_bg} scale={1} radius={14} style={{ width: 52, height: 52 }} />
+      <DishImage imageUrl={log.thumb_url ?? log.image_url} imageKey={log.image_key} bg={log.image_bg} scale={1} radius={14} style={{ width: 52, height: 52 }} />
       <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
         <Txt v="itemTitle" numberOfLines={1}>
           {log.dish_name}

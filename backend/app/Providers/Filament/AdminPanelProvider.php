@@ -10,6 +10,7 @@ use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\FontProviders\LocalFontProvider;
+use Filament\Navigation\NavigationItem;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Enums\Width;
@@ -17,7 +18,7 @@ use Filament\View\PanelsRenderHook;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
-use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
@@ -45,7 +46,7 @@ class AdminPanelProvider extends PanelProvider
             ->unsavedChangesAlerts()
             // Brand theme (plain CSS, no build step) + bundled Poppins font.
             ->renderHook(PanelsRenderHook::HEAD_END, fn () => Blade::render(<<<'HTML'
-                <link rel="stylesheet" href="{{ asset('css/handi-admin.css') }}?v=9">
+                <link rel="stylesheet" href="{{ asset('css/handi-admin.css') }}?v=10">
                 <script>
                     // Logo animation: respect "reduce motion" and keep it playing after SPA navigation.
                     (function () {
@@ -85,7 +86,20 @@ class AdminPanelProvider extends PanelProvider
                 'success' => BrandColors::SUCCESS,
                 'gray' => BrandColors::GRAY,
             ])
-            ->navigationGroups(['People', 'Dish library'])
+            ->navigationGroups(['People', 'Dish library', 'Developer'])
+            ->navigationItems([
+                NavigationItem::make('Telescope')
+                    ->url(fn (): string => url(config('telescope.path', 'telescope')), shouldOpenInNewTab: true)
+                    ->icon('heroicon-o-bug-ant')
+                    ->group('Developer')
+                    ->sort(1)
+                    ->visible(fn (): bool => (bool) config('telescope.enabled') && class_exists(\Laravel\Telescope\Telescope::class)),
+                NavigationItem::make('API docs')
+                    ->url(fn (): string => url('docs/api'), shouldOpenInNewTab: true)
+                    ->icon('heroicon-o-code-bracket')
+                    ->group('Developer')
+                    ->sort(2),
+            ])
             ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
@@ -99,7 +113,7 @@ class AdminPanelProvider extends PanelProvider
                 StartSession::class,
                 AuthenticateSession::class,
                 ShareErrorsFromSession::class,
-                PreventRequestForgery::class,
+                VerifyCsrfToken::class,
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,

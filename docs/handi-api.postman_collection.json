@@ -71,6 +71,86 @@
   ],
   "item": [
     {
+      "name": "Health",
+      "item": [
+        {
+          "name": "API health check",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "health"
+              ]
+            },
+            "description": "Is the API working? Checks database, cache and photo storage. 200 = all ok, 503 = a check failed. No token.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('API is healthy', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().status).to.eql('ok'); });"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 example",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/health",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "health"
+                  ]
+                },
+                "description": "Is the API working? Checks database, cache and photo storage. 200 = all ok, 503 = a check failed. No token.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"ok\",\n  \"app\": \"Handi\",\n  \"version\": \"1.0.0\",\n  \"environment\": \"local\",\n  \"time\": \"2026-10-14T16:01:18+00:00\",\n  \"checks\": {\n    \"database\": {\n      \"status\": \"ok\",\n      \"ms\": 3.3,\n      \"categories\": 9,\n      \"library_dishes\": 42\n    },\n    \"cache\": {\n      \"status\": \"ok\",\n      \"ms\": 4.2\n    },\n    \"storage\": {\n      \"status\": \"ok\",\n      \"ms\": 12.3\n    }\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "Public catalog",
       "description": "No token needed. Used by onboarding (before sign-up) and to show the library.",
       "item": [

@@ -1,0 +1,283 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Handi — system architecture",
+    "output": "handi-system.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "app",
+      "type": "frontend",
+      "label": "Handi app",
+      "sublabel": "Expo · React Native",
+      "pos": [
+        40,
+        300
+      ],
+      "size": [
+        160,
+        64
+      ],
+      "tag": "Android · iOS · web"
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "REST API",
+      "sublabel": "/api/v1 controllers",
+      "pos": [
+        370,
+        300
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "services",
+      "type": "backend",
+      "label": "Domain services",
+      "sublabel": "Picks · Kitchen · Meals",
+      "pos": [
+        700,
+        300
+      ],
+      "size": [
+        170,
+        64
+      ]
+    },
+    {
+      "id": "db",
+      "type": "database",
+      "label": "MySQL",
+      "sublabel": "users · dishes · meals",
+      "pos": [
+        1040,
+        300
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "auth",
+      "type": "security",
+      "label": "Laravel Sanctum",
+      "sublabel": "per-device tokens",
+      "pos": [
+        370,
+        110
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "weather",
+      "type": "external",
+      "label": "Open-Meteo",
+      "sublabel": "weather, keyless",
+      "pos": [
+        705,
+        110
+      ],
+      "size": [
+        160,
+        64
+      ],
+      "tag": "cached ~1 km"
+    },
+    {
+      "id": "admin",
+      "type": "external",
+      "label": "Super admin",
+      "sublabel": "browser",
+      "pos": [
+        40,
+        500
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "filament",
+      "type": "frontend",
+      "label": "Filament 4 admin",
+      "sublabel": "/admin · Livewire",
+      "pos": [
+        370,
+        500
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "media",
+      "type": "cloud",
+      "label": "Media storage",
+      "sublabel": "public disk / S3 · R2",
+      "pos": [
+        705,
+        500
+      ],
+      "size": [
+        160,
+        64
+      ],
+      "tag": "WebP thumb + card"
+    },
+    {
+      "id": "worker",
+      "type": "backend",
+      "label": "Scheduler + queue",
+      "sublabel": "reminders · conversions",
+      "pos": [
+        1040,
+        500
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "push",
+      "type": "external",
+      "label": "Expo Push",
+      "sublabel": "push service",
+      "pos": [
+        1360,
+        500
+      ],
+      "size": [
+        150,
+        64
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "app-api",
+      "from": "app",
+      "to": "api",
+      "label": "HTTPS JSON",
+      "variant": "emphasis"
+    },
+    {
+      "id": "api-services",
+      "from": "api",
+      "to": "services",
+      "label": "validated input"
+    },
+    {
+      "id": "services-db",
+      "from": "services",
+      "to": "db",
+      "label": "Eloquent SQL"
+    },
+    {
+      "id": "auth-api",
+      "from": "auth",
+      "to": "api",
+      "label": "Bearer token check",
+      "variant": "security",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "services-weather",
+      "from": "services",
+      "to": "weather",
+      "label": "forecast",
+      "variant": "dashed",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "services-media",
+      "from": "services",
+      "to": "media",
+      "label": "dish photos",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "admin-filament",
+      "from": "admin",
+      "to": "filament",
+      "label": "HTTPS session"
+    },
+    {
+      "id": "filament-api",
+      "from": "filament",
+      "to": "api",
+      "label": "same app + models",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "worker-db",
+      "from": "worker",
+      "to": "db",
+      "label": "due reminders",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "worker-push",
+      "from": "worker",
+      "to": "push",
+      "label": "send",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "App",
+      "items": [
+        "Expo Router screens, React Query cache persisted 7 days",
+        "Offline meal queue synced via POST /me/sync",
+        "Photos compressed on device (≤1600 px, JPEG 0.82)"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Backend",
+      "items": [
+        "REST API, Sanctum, Filament admin and the scheduler run in one Laravel 12 app (PHP 8.2)",
+        "Laravel 12 REST API + Filament 4 admin in one app",
+        "PickService: weather fit, repeat gap, 3 distinct categories",
+        "Spatie Media Library: thumb 240 px, card 900 px (WebP)"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Security",
+      "items": [
+        "Sanctum bearer token per phone, revoked on logout",
+        "Admin panel and Telescope: super admins only",
+        "Secrets only in .env (git-ignored)"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Operations",
+      "items": [
+        "GET /api/v1/health checks DB, cache, storage",
+        "schedule:work runs reminders every minute",
+        "Telescope at /telescope for debugging"
+      ]
+    }
+  ]
+}

@@ -68,7 +68,7 @@ it('creates, renames and deletes a custom dish', function () {
         'effort' => 'heavy', 'cost' => 'medium', 'photo' => UploadedFile::fake()->image('haleem.jpg', 600, 600),
     ], ['Accept' => 'application/json'])->assertCreated()->assertJsonPath('data.is_custom', true)->json('data.id');
 
-    expect(KitchenDish::find($id)->photo_path)->not->toBeNull();
+    expect(KitchenDish::find($id)->hasPhoto())->toBeTrue();
 
     $this->actingAs($user)->patchJson("/api/v1/me/custom-dishes/{$id}", ['name' => 'Haleem'])->assertOk()->assertJsonPath('data.name', 'Haleem');
     $this->actingAs($user)->getJson('/api/v1/me/custom-dishes')->assertJsonCount(2, 'data');

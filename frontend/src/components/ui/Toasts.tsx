@@ -1,3 +1,4 @@
+import { useIsFocused } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
@@ -15,7 +16,8 @@ import { Txt } from './Txt';
 export interface FlashMessage {
   title: string;
   sub?: string;
-  tone?: 'success' | 'info';
+  /** success = green check · info = amber · error = red (failed actions, with the server's message as `sub`). */
+  tone?: 'success' | 'info' | 'error';
   /** e.g. Undo. Runs `onPress`, then shows `{title: after ?? 'Undone', tone: 'info'}` for 2.5s. */
   action?: { label: string; onPress: () => void | Promise<void>; after?: string };
 }
@@ -74,20 +76,27 @@ export function FlashHost() {
   }));
 
   if (!shown) return null;
-  const success = (shown.tone ?? 'success') === 'success';
+  const tone = shown.tone ?? 'success';
+  const success = tone === 'success';
 
   return (
     <Animated.View pointerEvents="box-none" style={[styles.flashWrap, { top: insets.top + 8 }, style]}>
       <View style={[styles.toast, S.toast, { paddingVertical: 10, paddingLeft: 12, paddingRight: 8 }]} accessibilityLiveRegion="polite" accessibilityRole="alert">
-        <View style={[styles.iconCircle, { backgroundColor: success ? C.success : C.accent }]}>
-          {success ? <Icon name="check" size={18} color={C.white} strokeWidth={3} /> : <Icon name="info" size={18} color={C.ink} strokeWidth={2.4} />}
+        <View style={[styles.iconCircle, { backgroundColor: success ? C.success : tone === 'error' ? C.danger : C.accent }]}>
+          {success ? (
+            <Icon name="check" size={18} color={C.white} strokeWidth={3} />
+          ) : tone === 'error' ? (
+            <Icon name="alert" size={18} color={C.white} strokeWidth={2.4} />
+          ) : (
+            <Icon name="info" size={18} color={C.ink} strokeWidth={2.4} />
+          )}
         </View>
         <View style={{ flex: 1, gap: 1 }}>
           <Txt v="toastTitle" color={C.white} numberOfLines={1}>
             {shown.title}
           </Txt>
           {shown.sub ? (
-            <Txt v="toastSub" color={C.onDarkMuted} numberOfLines={1}>
+            <Txt v="toastSub" color={C.onDarkMuted} numberOfLines={tone === 'error' ? 3 : 1}>
               {shown.sub}
             </Txt>
           ) : null}
@@ -119,34 +128,64 @@ export function FlashHost() {
 
 // ---------------------------------------------------------------- NetToast (8.2)
 
+/** How long the offline toast stays up (then the app keeps working offline quietly). */
+const OFFLINE_TOAST_MS = 5000;
+/** One offline announcement per connection drop, even when several screens render a NetToast. */
+let offlineAnnounced = false;
+
 /**
  * Offline / back-online bottom toast. Render inside a screen with that screen's bottom offset
  * (Today 100, Dishes 172, History 172, Settings 100, Signup 168).
+ * Going offline shows "You're offline" for ~5 s, then it slides away; coming back shows
+ * "Back online" for 3.5 s.
  */
 export function NetToast({ bottom = 96, offlineSub, delay = 350 }: { bottom?: number; offlineSub?: string; delay?: number }) {
   const online = useNet((s) => s.online);
   const recheck = useNet((s) => s.recheck);
+  // Tab screens stay mounted: only the screen the user is looking at shows the toast.
+  const focused = useIsFocused();
   const [mode, setMode] = useState<'hidden' | 'offline' | 'online'>('hidden');
   const [checking, setChecking] = useState(false);
-  const wasOffline = useRef(false);
+  const wasOffline = useRef(!online);
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const y = useSharedValue(140);
+
+  const hideAfter = (ms: number) => {
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+    hideTimer.current = setTimeout(() => setMode('hidden'), ms);
+  };
 
   useEffect(() => {
     let t: ReturnType<typeof setTimeout> | undefined;
     if (!online) {
       wasOffline.current = true;
-      t = setTimeout(() => setMode('offline'), delay);
-    } else if (wasOffline.current) {
-      wasOffline.current = false;
-      setMode('online');
-      t = setTimeout(() => setMode('hidden'), 3500);
+      if (!offlineAnnounced && focused) {
+        offlineAnnounced = true;
+        t = setTimeout(() => {
+          setMode('offline');
+          hideAfter(OFFLINE_TOAST_MS);
+        }, delay);
+      }
     } else {
-      setMode('hidden');
+      offlineAnnounced = false;
+      const cameBack = wasOffline.current && focused;
+      wasOffline.current = false;
+      t = setTimeout(() => {
+        setMode(cameBack ? 'online' : 'hidden');
+        if (cameBack) hideAfter(3500);
+      }, 0);
     }
     return () => {
       if (t) clearTimeout(t);
     };
-  }, [online, delay]);
+  }, [online, delay, focused]);
+
+  useEffect(
+    () => () => {
+      if (hideTimer.current) clearTimeout(hideTimer.current);
+    },
+    [],
+  );
 
   useEffect(() => {
     y.value = withTiming(mode === 'hidden' ? 140 : 0, { duration: 400, easing: Easing.bezier(0.2, 0.8, 0.2, 1) });
@@ -175,10 +214,12 @@ export function NetToast({ bottom = 96, offlineSub, delay = 350 }: { bottom?: nu
             disabled={checking}
             accessibilityRole="button"
             onPress={async () => {
+              if (hideTimer.current) clearTimeout(hideTimer.current); // stay up while checking
               setChecking(true);
               await new Promise((r) => setTimeout(r, 1200));
-              await recheck();
+              const ok = await recheck().catch(() => false);
               setChecking(false);
+              if (!ok) hideAfter(OFFLINE_TOAST_MS); // still offline: show the result, then go away
             }}>
             <Txt v="toastTitle" color={C.accent}>
               {checking ? '…' : 'Retry'}

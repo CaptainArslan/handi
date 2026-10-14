@@ -16,6 +16,12 @@ return [
     'name' => env('APP_NAME', 'Laravel'),
 
     /*
+    | Proxies to trust (ngrok, Herd Share/Expose, a load balancer, Cloudflare): '*' = any, or a
+    | comma-separated list of IPs. Lets Laravel see https and the real host behind the tunnel.
+    */
+    'trusted_proxies' => env('TRUSTED_PROXIES'),
+
+    /*
     |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------

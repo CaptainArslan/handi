@@ -1,6 +1,6 @@
 # Handi backend
 
-Laravel 13 API (`/api/v1`) and Filament 4 super-admin panel (`/admin`), sharing one MySQL database.
+Laravel 12 API (`/api/v1`) and Filament 4 super-admin panel (`/admin`), sharing one MySQL database.
 
 - Written API guide: [`../docs/api.md`](../docs/api.md)
 - Interactive API docs (OpenAPI, try-it-out): **http://localhost:8000/docs/api** · raw spec: `/docs/api.json`
@@ -9,7 +9,7 @@ Laravel 13 API (`/api/v1`) and Filament 4 super-admin panel (`/admin`), sharing 
 
 ## Requirements
 
-- **PHP 8.3+** (Laravel 13 does not run on 8.2) with `intl`, `zip`, `pdo_mysql`, `pdo_sqlite`, `mbstring`, `fileinfo`, `gd`
+- **PHP 8.2+** (Laravel 12) with `intl`, `zip`, `pdo_mysql`, `pdo_sqlite`, `mbstring`, `fileinfo`, `gd`
 - Composer 2, MySQL 8
 
 On Windows, [Laravel Herd](https://herd.laravel.com) or Laragon gives you all of these. In Laragon, enable `intl` and `zip` under *PHP → Extensions*.
@@ -40,13 +40,35 @@ php artisan schedule:work                       # sends each user's morning remi
 - API docs: http://localhost:8000/docs/api (open locally; super admins only when `APP_ENV` isn't `local`)
 - Quick check: `curl http://localhost:8000/api/v1/categories`
 
+## Dish photos (Spatie Media Library)
+
+Photos of library dishes (admin) and users' dishes (app) are stored with [Spatie Media Library](https://spatie.be/docs/laravel-medialibrary) on `MEDIA_DISK` (`public` locally, `s3`/Cloudflare R2 in production):
+
+- One photo per dish; a new upload replaces the old file and its sizes.
+- The original is capped at **1600 px / JPEG 85** before it's stored, and two WebP sizes are made: `thumb` (240×240, lists) and `card` (≤ 900 px, cards and the dish page). The API returns `thumb_url` and `image_url` (card).
+- `MEDIA_QUEUE_CONVERSIONS=false` (default) makes the sizes right away; set it to `true` in production with `php artisan queue:work` running to make them in the background.
+- Photos uploaded before the media library: run `php artisan handi:photos-to-media` once to move them in (adds the sizes, removes the old files).
+
+## Telescope (debugging)
+
+[Laravel Telescope](https://laravel.com/docs/telescope) shows every request, query, exception, log, mail, job and scheduled task at **http://localhost:8000/telescope** (also linked in the admin sidebar under *Developer*).
+
+```bash
+composer require laravel/telescope   # once
+php artisan migrate                  # creates the telescope_entries tables
+```
+
+- `TELESCOPE_ENABLED=true` in `.env` turns it on (it's off when unset, in tests and in `.env.production.example`).
+- Locally it records everything and opens without login. On any other environment it records only problems and only signed-in super admins can open it (sign in at `/admin` first).
+- Passwords, tokens and reset codes are masked; entries older than 48 hours are pruned daily by the scheduler.
+
 ## Tests
 
 ```bash
 php artisan test
 ```
 
-63 tests on in-memory SQLite (needs `pdo_sqlite`). Covers every endpoint, the pick rules, offline sync, reminders, the API docs gate and every admin page (users, user detail tabs, activity log, library, dish import, image preview). Weather and Expo push are faked — tests never hit the network.
+70 tests on in-memory SQLite (needs `pdo_sqlite`). Covers every endpoint, the pick rules, offline sync, reminders, the API docs gate and every admin page (users, user detail tabs, activity log, library, dish import, image preview). Weather and Expo push are faked — tests never hit the network.
 
 ## How it fits together
 

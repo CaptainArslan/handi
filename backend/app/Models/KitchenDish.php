@@ -6,20 +6,25 @@ use App\Enums\Cost;
 use App\Enums\Effort;
 use App\Enums\PhotoStatus;
 use App\Enums\UsualMeal;
+use App\Models\Concerns\HasDishPhoto;
 use App\Support\Media;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\MediaLibrary\HasMedia;
 
 /**
  * A dish in a user's kitchen: either a library dish (with optional tag overrides)
  * or a custom dish the user created. "Effective" accessors merge both cases.
  */
-class KitchenDish extends Model
+class KitchenDish extends Model implements HasMedia
 {
-    use HasFactory;
+    use HasDishPhoto, HasFactory;
+
+    /** The user's own photo is part of every dish card, so load it with the dish (no N+1). */
+    protected $with = ['media'];
 
     protected $fillable = [
         'user_id', 'dish_id', 'is_custom', 'name', 'category_id', 'usual_meal',
@@ -116,15 +121,35 @@ class KitchenDish extends Model
         return $this->effectiveCategory()?->image_key;
     }
 
-    /** Photo URL: the user's photo, the library photo, or the bundled art. */
-    public function imageUrl(): ?string
+    public function photoCollection(): string
     {
-        if ($this->photo_path && $this->photo_status === PhotoStatus::Ready) {
-            return Media::url($this->photo_path);
+        return 'photo';
+    }
+
+    /** True when the user added their own photo (media library or a legacy stored file). */
+    public function hasOwnPhoto(): bool
+    {
+        return $this->hasPhoto() || $this->photo_path !== null;
+    }
+
+    /**
+     * Picture of this dish in a size (`card` default, `thumb` for lists): the user's photo,
+     * then the library dish's photo, then the bundled art.
+     */
+    public function imageUrl(string $conversion = 'card'): ?string
+    {
+        if ($url = $this->photoUrl($conversion)) {
+            return $url;
         }
 
-        if (! $this->is_custom && $this->dish?->image) {
-            return Media::url($this->dish->image);
+        if ($this->photo_path && $this->photo_status === PhotoStatus::Ready) {
+            return Media::url($this->photo_path); // stored before the media library
+        }
+
+        if (! $this->is_custom && $this->dish) {
+            if ($url = $this->dish->photoUrl($conversion) ?? ($this->dish->image ? Media::url($this->dish->image) : null)) {
+                return $url;
+            }
         }
 
         return Media::artUrl($this->imageKey());

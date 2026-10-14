@@ -259,7 +259,7 @@ function CustomDishes({ total, onTab }: { total: number; onTab: (t: Tab) => void
       refresh();
     } catch (e) {
       setSheetOpen(false);
-      flash({ title: `Couldn’t remove ${dish.name}`, sub: errorMessage(e), tone: 'info' });
+      flash({ title: `Couldn’t remove ${dish.name}`, sub: errorMessage(e), tone: 'error' });
     } finally {
       setRemoving(false);
     }
@@ -278,7 +278,7 @@ function CustomDishes({ total, onTab }: { total: number; onTab: (t: Tab) => void
     try {
       await endpoints.restoreCustomDish(r.dish.id);
     } catch (e) {
-      flash({ title: `Couldn’t bring back ${r.dish.name}`, sub: errorMessage(e), tone: 'info' });
+      flash({ title: `Couldn’t bring back ${r.dish.name}`, sub: errorMessage(e), tone: 'error' });
     }
     refresh();
   };
@@ -357,7 +357,7 @@ function CustomDishes({ total, onTab }: { total: number; onTab: (t: Tab) => void
         {confirm ? (
           <>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-              <DishImage imageUrl={confirm.image_url} imageKey={confirm.image_key} bg={confirm.image_bg} scale={1} radius={16} style={{ width: 64, height: 64 }} />
+              <DishImage imageUrl={confirm.thumb_url ?? confirm.image_url} imageKey={confirm.image_key} bg={confirm.image_bg} scale={1} radius={16} style={{ width: 64, height: 64 }} />
               <View style={{ flex: 1, gap: 4 }}>
                 <Txt v="sheetTitle" size={21} accessibilityRole="header">
                   {`Remove ${confirm.name}?`}
@@ -385,7 +385,7 @@ function CustomDishes({ total, onTab }: { total: number; onTab: (t: Tab) => void
 function CustomRow({ dish, index, onRemove }: { dish: KitchenDish; index: number; onRemove: () => void }) {
   return (
     <Animated.View entering={FadeInDown.duration(300).delay(Math.min(index, 6) * 40)} style={styles.row}>
-      <DishImage imageUrl={dish.image_url} imageKey={dish.image_key} bg={dish.image_bg} scale={1} radius={16} alt={dish.name} style={{ width: 92, height: 92 }} />
+      <DishImage imageUrl={dish.thumb_url ?? dish.image_url} imageKey={dish.image_key} bg={dish.image_bg} scale={1} radius={16} alt={dish.name} style={{ width: 92, height: 92 }} />
       <View style={{ flex: 1, minWidth: 0, gap: 6, paddingVertical: 2 }}>
         <Txt v="itemTitle" lh={19.2} numberOfLines={2}>
           {dish.name}

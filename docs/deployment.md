@@ -7,9 +7,9 @@ Target: one VPS for the Laravel API + admin, Cloudflare R2 (or S3) for images, E
 Either use **Laravel Forge** (provisions everything below and gives you a deploy button) or do it by hand:
 
 ```bash
-# PHP 8.3 + extensions, MySQL 8, Nginx, Composer
+# PHP 8.2 (or newer) + extensions, MySQL 8, Nginx, Composer
 sudo apt update && sudo apt install -y nginx mysql-server unzip git \
-  php8.3-fpm php8.3-cli php8.3-mysql php8.3-mbstring php8.3-xml php8.3-curl php8.3-zip php8.3-intl php8.3-gd php8.3-bcmath
+  php8.2-fpm php8.2-cli php8.2-mysql php8.2-mbstring php8.2-xml php8.2-curl php8.2-zip php8.2-intl php8.2-gd php8.2-bcmath
 curl -sS https://getcomposer.org/installer | php && sudo mv composer.phar /usr/local/bin/composer
 ```
 
