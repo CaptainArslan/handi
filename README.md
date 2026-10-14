@@ -412,25 +412,37 @@ handi/
 
 ## Run it locally
 
-**You need:** PHP 8.2+ (`intl`, `zip`, `pdo_mysql`, `gd`, `exif`), Composer 2, MySQL 8, Node 22, and Android Studio (emulator) or Expo Go.
+The project has two parts that run side by side: the **backend** (Laravel API + admin) and the **frontend** (Expo app). Start the backend first, then point the app at it.
+
+**You need:** PHP 8.2+ with Composer 2 and MySQL 8 (Herd or Laragon on Windows) for the backend, and Node 22 with Android Studio (emulator) for the app.
+
+### 1. Backend: API and admin
 
 ```bash
-# 1) Backend
 cd backend
 composer install
-cp .env.example .env              # Windows: copy .env.example .env  — then set DB_*, ADMIN_EMAIL, ADMIN_PASSWORD
+copy .env.example .env              # macOS/Linux: cp .env.example .env
 php artisan key:generate
-php artisan migrate --seed        # tables + categories, dish library, cities, super admin (+ demo user)
+# edit .env: DB_DATABASE=handi, DB_USERNAME, DB_PASSWORD, ADMIN_EMAIL, ADMIN_PASSWORD
+# (optional demo user: DEMO_USER_EMAIL, DEMO_USER_PASSWORD), and create an empty "handi" database
+php artisan migrate --seed          # tables + categories, dish library, cities, super admin, demo user
 php artisan storage:link
 php artisan serve --host=0.0.0.0 --port=8000
-php artisan schedule:work         # optional: morning reminders
+```
 
-# 2) App
-cd ../frontend
+Check: http://localhost:8000/api/v1/health shows `"status": "ok"`, and http://localhost:8000/admin lets you sign in.
+
+### 2. Frontend: mobile app
+
+In a second terminal:
+
+```bash
+cd frontend
 npm install
-cp .env.example .env              # EXPO_PUBLIC_API_BASE_URL — see the table below
-npx expo run:android              # development build on the emulator (first time / after native changes)
-npx expo start                    # day to day; press "a" for Android
+copy .env.example .env              # macOS/Linux: cp .env.example .env
+# set EXPO_PUBLIC_API_BASE_URL (table below)
+npx expo run:android                # first time: builds and installs the app on the running emulator
+npx expo start                      # day to day; press "a" for Android, "r" to reload
 ```
 
 | Where the app runs | `EXPO_PUBLIC_API_BASE_URL` |
@@ -439,6 +451,13 @@ npx expo start                    # day to day; press "a" for Android
 | Phone on the same Wi-Fi | `http://<PC LAN IP>:8000/api/v1` |
 | Web / same PC | `http://localhost:8000/api/v1` |
 | Through ngrok | `https://<id>.ngrok-free.app/api/v1` (set `TRUSTED_PROXIES=*` in the backend) |
+
+Restart with `npx expo start -c` after changing `.env`. Sign in with the demo user, or create an account through the app.
+
+### Full guides
+
+- **[Backend setup and running](backend/README.md#requirements)**: requirements, `.env`, database, Herd/ngrok, updating, troubleshooting.
+- **[Frontend setup and running](frontend/README.md#requirements)**: emulator, real phone, web, EAS dev builds, troubleshooting.
 
 **Local URLs:**
 
@@ -470,7 +489,7 @@ Every secret and setting lives in `.env`, which is git-ignored. `backend/.env.ex
 ## Testing and quality
 
 ```bash
-cd backend && php artisan test          # 70 Pest tests: every endpoint, pick rules, sync, admin pages, media
+cd backend && php artisan test          # 77 Pest tests: every endpoint, pick rules, sync, admin pages, media
 cd frontend && npm run typecheck && npm run lint
 ```
 

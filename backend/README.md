@@ -9,36 +9,125 @@ Laravel 12 API (`/api/v1`) and Filament 4 super-admin panel (`/admin`), sharing 
 
 ## Requirements
 
-- **PHP 8.2+** (Laravel 12) with `intl`, `zip`, `pdo_mysql`, `pdo_sqlite`, `mbstring`, `fileinfo`, `gd`
-- Composer 2, MySQL 8
+| Tool | Version | Notes |
+|---|---|---|
+| PHP | **8.2 or newer** | Extensions: `intl`, `zip`, `gd`, `exif`, `mbstring`, `fileinfo`, `pdo_mysql` (+ `pdo_sqlite` for tests) |
+| Composer | 2.x | |
+| MySQL / MariaDB | MySQL 8 or MariaDB 10.6+ | Any local server (Herd Pro, Laragon, XAMPP, DBngin, Docker) |
+| Node | not needed | The admin uses plain CSS — no `npm install` / Vite build for the backend |
 
-On Windows, [Laravel Herd](https://herd.laravel.com) or Laragon gives you all of these. In Laragon, enable `intl` and `zip` under *PHP → Extensions*.
+**Windows:** [Laravel Herd](https://herd.laravel.com) or Laragon gives you PHP, Composer and MySQL. In Laragon enable `intl`, `zip`, `gd` and `exif` under *PHP → Extensions*. Check with `php -v` and `php -m`.
 
-## Setup
+> If your system PHP is older than 8.2 but Herd has a newer one, prefix the commands with Herd's PHP, e.g. `herd php artisan migrate` and `herd composer install`.
+
+## Setup (first time)
+
+**1. Install packages**
 
 ```bash
 cd backend
-composer install                    # or `composer update` after pulling new packages
-copy .env.example .env              # first time only, then fill DB_*, ADMIN_*, optional DEMO_USER_*
-php artisan key:generate            # first time only
-php artisan migrate:fresh --seed    # tables + 9 categories + library dishes + 23 cities + super admin (+ demo user)
-php artisan storage:link            # makes uploaded dish photos reachable by URL
+composer install
 ```
 
-Every setting and secret lives in `.env` (git-ignored); `.env.example` lists each key with a comment. The super admin comes from `ADMIN_EMAIL` / `ADMIN_PASSWORD`; add more with `php artisan handi:create-admin someone@example.com`.
+> Use `composer install` (it follows `composer.lock`). Don't run `composer require filament/filament` or `php artisan filament:install --panels` — Filament is already installed and those commands break the lock file.
 
-Set `DEMO_USER_EMAIL` / `DEMO_USER_PASSWORD` locally to seed a demo app user (Hina, Lahore) with a full kitchen, custom dishes, two weeks of meals and notifications — handy for Postman and for the app.
+**2. Create `.env`**
+
+```bash
+copy .env.example .env      # Windows (cmd / PowerShell)
+cp .env.example .env        # macOS / Linux / Git Bash
+php artisan key:generate
+```
+
+Then open `.env` and fill in at least:
+
+```dotenv
+APP_URL=http://localhost:8000
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=handi
+DB_USERNAME=root
+DB_PASSWORD=
+
+ADMIN_EMAIL=admin@example.com       # super admin for /admin
+ADMIN_PASSWORD=change-me-please
+
+# Optional: a demo app user with a full kitchen and two weeks of meals
+DEMO_USER_EMAIL=hina@example.com
+DEMO_USER_PASSWORD=kitchen123
+```
+
+`.env` is git-ignored; never commit it. Every other key is explained in `.env.example`.
+
+**3. Create the database**
+
+Create an empty database called `handi` (utf8mb4) in your MySQL tool, or:
+
+```bash
+mysql -u root -e "CREATE DATABASE handi CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+```
+
+**4. Tables, seed data and storage**
+
+```bash
+php artisan migrate --seed     # tables + 9 categories, dish library, 23 cities, super admin (+ demo user)
+php artisan storage:link       # makes uploaded photos reachable by URL
+```
+
+To start over later: `php artisan migrate:fresh --seed` (deletes all data).
 
 ## Running
 
 ```bash
-php artisan serve --host=0.0.0.0 --port=8000   # reachable from your phone on the same Wi-Fi
-php artisan schedule:work                       # sends each user's morning reminder at their chosen time
+php artisan serve --host=0.0.0.0 --port=8000
 ```
 
-- Admin panel: http://localhost:8000/admin
-- API docs: http://localhost:8000/docs/api (open locally; super admins only when `APP_ENV` isn't `local`)
-- Quick check: `curl http://localhost:8000/api/v1/categories`
+`--host=0.0.0.0` lets the Android emulator and phones on your Wi-Fi reach it. Keep this terminal open.
+
+Optional, in extra terminals:
+
+```bash
+php artisan schedule:work      # morning reminders + Telescope pruning
+php artisan queue:work         # only if MEDIA_QUEUE_CONVERSIONS=true
+```
+
+**Check it's up:**
+
+| What | URL |
+|---|---|
+| Health check (should say `"status": "ok"`) | http://localhost:8000/api/v1/health |
+| Admin panel (log in with `ADMIN_EMAIL` / `ADMIN_PASSWORD`) | http://localhost:8000/admin |
+| Interactive API docs | http://localhost:8000/docs/api |
+| Telescope (when `TELESCOPE_ENABLED=true`) | http://localhost:8000/telescope |
+
+Using Herd? Link the folder (`herd link handi-backend`) and use `http://handi-backend.test` instead of `php artisan serve`. Phones and the emulator can't open `.test` addresses, so for the app keep `php artisan serve --host=0.0.0.0` running, or share it with ngrok / `herd share`.
+
+**Sharing over ngrok:** `ngrok http 8000`, then set `APP_URL` to the ngrok URL and `TRUSTED_PROXIES=*` in `.env`, and run `php artisan config:clear`.
+
+## After pulling changes
+
+```bash
+composer install
+php artisan migrate
+php artisan optimize:clear
+```
+
+Then hard-refresh the admin (Ctrl+F5).
+
+## Common problems
+
+| Problem | Fix |
+|---|---|
+| `Your PHP version … does not satisfy …` | Use PHP 8.2+ (`php -v`); with Herd run `herd composer install` |
+| `could not find driver` | Enable `pdo_mysql` in `php.ini` |
+| `SQLSTATE[HY000] [1049] Unknown database 'handi'` | Create the database (step 3) |
+| `SQLSTATE[HY000] [2002] Connection refused` | Start MySQL; check `DB_HOST` / `DB_PORT` |
+| Photos don't load in the app | `php artisan storage:link`, and `APP_URL` must be an address the phone can reach |
+| `global_helpers.php` / Filament class not found | `composer install` again; don't `composer require filament/filament` |
+| Admin shows old styles or pages | `php artisan optimize:clear`, then Ctrl+F5 |
+| Telescope says *Unable to access … using "local" environment* | Set `TRUSTED_PROXIES=*` and sign in at `/admin` first |
 
 ## Dish photos (Spatie Media Library)
 
@@ -53,10 +142,7 @@ Photos of library dishes (admin) and users' dishes (app) are stored with [Spatie
 
 [Laravel Telescope](https://laravel.com/docs/telescope) shows every request, query, exception, log, mail, job and scheduled task at **http://localhost:8000/telescope** (also linked in the admin sidebar under *Developer*).
 
-```bash
-composer require laravel/telescope   # once
-php artisan migrate                  # creates the telescope_entries tables
-```
+Telescope is already installed; `php artisan migrate` creates its tables.
 
 - `TELESCOPE_ENABLED=true` in `.env` turns it on (it's off when unset, in tests and in `.env.production.example`).
 - Locally it records everything and opens without login. On any other environment it records only problems and only signed-in super admins can open it (sign in at `/admin` first).
@@ -68,7 +154,7 @@ php artisan migrate                  # creates the telescope_entries tables
 php artisan test
 ```
 
-70 tests on in-memory SQLite (needs `pdo_sqlite`). Covers every endpoint, the pick rules, offline sync, reminders, the API docs gate and every admin page (users, user detail tabs, activity log, library, dish import, image preview). Weather and Expo push are faked — tests never hit the network.
+77 tests on in-memory SQLite (needs `pdo_sqlite`). Covers every endpoint, the pick rules, offline sync, reminders, the API docs gate and every admin page (users, user detail tabs, activity log, library, dish import, image preview). Weather and Expo push are faked — tests never hit the network.
 
 ## How it fits together
 
