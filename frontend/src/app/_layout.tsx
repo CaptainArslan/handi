@@ -81,7 +81,7 @@ export default function RootLayout() {
     <>
       <StatusBar style="dark" />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: C.bg }, animation: 'slide_from_right' }}>
-        <Stack.Screen name="index" options={{ animation: 'fade', contentStyle: { backgroundColor: C.white } }} />
+        <Stack.Screen name="index" options={{ animation: 'fade', contentStyle: { backgroundColor: '#FAF9F0' } }} />
         <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
         <Stack.Screen name="welcome" options={{ animation: 'fade' }} />
         <Stack.Screen name="add-dish" options={{ animation: 'slide_from_bottom' }} />

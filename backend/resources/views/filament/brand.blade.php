@@ -1,5 +1,5 @@
 {{-- Handi Admin brand: the animated clay-pot logo (looping, muted). Full logo on the sign-in pages. --}}
-@php($full = request()->routeIs('filament.admin.auth.*'))
+@php($full = ! filament()->auth()->check())
 @if ($full)
     <div class="handi-brand-full">
         <video class="handi-logo-video" autoplay muted loop playsinline preload="auto"

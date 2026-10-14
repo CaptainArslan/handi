@@ -31,7 +31,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
-            ->profile()
+            ->profile(\App\Filament\Pages\Auth\EditProfile::class, isSimple: false)
             ->brandName('Handi Admin')
             ->brandLogo(fn () => view('filament.brand'))
             ->brandLogoHeight('2.5rem')
@@ -45,7 +45,7 @@ class AdminPanelProvider extends PanelProvider
             ->unsavedChangesAlerts()
             // Brand theme (plain CSS, no build step) + bundled Poppins font.
             ->renderHook(PanelsRenderHook::HEAD_END, fn () => Blade::render(<<<'HTML'
-                <link rel="stylesheet" href="{{ asset('css/handi-admin.css') }}?v=8">
+                <link rel="stylesheet" href="{{ asset('css/handi-admin.css') }}?v=9">
                 <script>
                     // Logo animation: respect "reduce motion" and keep it playing after SPA navigation.
                     (function () {
