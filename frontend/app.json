@@ -8,7 +8,11 @@
     "scheme": "handi",
     "userInterfaceStyle": "light",
     "ios": {
-      "bundleIdentifier": "com.hegemonic.handi"
+      "bundleIdentifier": "com.hegemonic.handi",
+      "supportsTablet": false,
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
