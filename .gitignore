@@ -15,3 +15,7 @@ desktop.ini
 
 # Local Claude screenshots / handoff files
 /Claude outputs/
+
+# Marketing videos, reels and ad assets (large media, kept out of the repo)
+/marketing/
+/reels/
