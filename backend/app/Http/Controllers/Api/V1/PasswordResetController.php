@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\AuthCode;
 use App\Models\User;
 use App\Services\AuthCodeService;
+use App\Mail\PasswordChangedMail;
 use App\Support\Activity;
+use App\Support\Mailer;
 use App\Support\Rules;
 use Dedoc\Scramble\Attributes\BodyParameter;
 use Dedoc\Scramble\Attributes\Group;
@@ -140,6 +142,7 @@ class PasswordResetController extends Controller
         $code->forceFill(['consumed_at' => now()])->save();
 
         Activity::log($user, 'auth.password_reset', 'Reset the password with an email code');
+        Mailer::notice($user->email, new PasswordChangedMail($user, Mailer::when($user), Mailer::device($request), true));
 
         return response()->noContent();
     }

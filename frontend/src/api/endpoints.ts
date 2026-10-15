@@ -1,6 +1,4 @@
-import { Platform } from 'react-native';
-
-import { api, postMultipart } from './client';
+import { api, isNetworkError, uploadFile } from './client';
 import type {
   AppNotification,
   Budget,
@@ -73,25 +71,26 @@ export interface MealInput {
 
 type PhotoInput = { uri: string; name: string; type: string };
 
-/** A file part for FormData: `{uri,name,type}` on phones, a real File in the browser. */
-async function filePart(photo: PhotoInput): Promise<Blob> {
-  if (Platform.OS === 'web') {
-    const blob = await (await fetch(photo.uri)).blob();
-    return new File([blob], photo.name, { type: photo.type || blob.type });
-  }
-  return photo as unknown as Blob;
+/** Plain form fields sent with a custom dish photo (multipart). */
+function customDishFields(input: CustomDishInput): Record<string, string | string[] | undefined> {
+  return {
+    name: input.name,
+    category: input.category,
+    weather: input.weather,
+    usual_meal: input.usual_meal,
+    effort: input.effort,
+    cost: input.cost,
+  };
 }
 
-async function customDishForm(input: CustomDishInput): Promise<FormData> {
-  const form = new FormData();
-  if (input.name !== undefined) form.append('name', input.name);
-  if (input.category !== undefined) form.append('category', input.category);
-  input.weather?.forEach((w) => form.append('weather[]', w));
-  if (input.usual_meal) form.append('usual_meal', input.usual_meal);
-  if (input.effort) form.append('effort', input.effort);
-  if (input.cost) form.append('cost', input.cost);
-  if (input.photo) form.append('photo', await filePart(input.photo));
-  return form;
+/** The dish was saved but its photo didn't upload — the screen still treats the save as a success. */
+export class PhotoUploadFailed extends Error {
+  constructor(
+    public readonly dish: KitchenDishDetail,
+    public readonly cause: unknown,
+  ) {
+    super('The dish was saved, but its photo did not upload.');
+  }
 }
 
 export const endpoints = {
@@ -150,18 +149,29 @@ export const endpoints = {
   updateDish: (id: number, body: { weather?: WeatherTag[]; effort?: Effort; cost?: Cost }) => d<KitchenDishDetail>(api.patch(`/me/dishes/${id}`, body)),
   resetDish: (id: number) => d<KitchenDishDetail>(api.delete(`/me/dishes/${id}/overrides`)),
   uploadDishPhoto: async (id: number, photo: PhotoInput) => {
-    const form = new FormData();
-    form.append('photo', await filePart(photo));
-    return postMultipart<Data<KitchenDishDetail>>(`/me/dishes/${id}/photo`, form).then((r) => r.data);
+    return uploadFile<Data<KitchenDishDetail>>(`/me/dishes/${id}/photo`, photo).then((r) => r.data);
   },
   removeDish: (id: number) => api.delete(`/me/dishes/${id}`),
   restoreDish: (id: number) => d<KitchenDishDetail>(api.post(`/me/dishes/${id}/restore`)),
 
   customDishes: () => d<KitchenDish[]>(api.get('/me/custom-dishes')),
-  createCustomDish: async (input: CustomDishInput) =>
-    input.photo
-      ? postMultipart<Data<KitchenDishDetail>>('/me/custom-dishes', await customDishForm(input)).then((r) => r.data)
-      : d<KitchenDishDetail>(api.post('/me/custom-dishes', { ...input, photo: undefined })),
+  createCustomDish: async (input: CustomDishInput): Promise<KitchenDishDetail> => {
+    const json = () => d<KitchenDishDetail>(api.post('/me/custom-dishes', { ...input, photo: undefined }));
+    if (!input.photo) return json();
+    try {
+      return await uploadFile<Data<KitchenDishDetail>>('/me/custom-dishes', input.photo, customDishFields(input)).then((r) => r.data);
+    } catch (e) {
+      if (!isNetworkError(e)) throw e;
+    }
+    // The photo upload couldn't get through: save the dish without it (a plain JSON request), then try the
+    // photo on its own. The dish is never lost because of the photo.
+    const dish = await json();
+    try {
+      return await endpoints.uploadDishPhoto(dish.id, input.photo);
+    } catch (e) {
+      throw new PhotoUploadFailed(dish, e);
+    }
+  },
   updateCustomDish: async (id: number, input: CustomDishInput) => {
     const dish = await d<KitchenDishDetail>(api.patch(`/me/custom-dishes/${id}`, { ...input, photo: undefined }));
     return input.photo ? endpoints.uploadDishPhoto(id, input.photo) : dish;

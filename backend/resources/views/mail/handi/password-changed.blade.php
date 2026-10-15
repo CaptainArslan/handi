@@ -1,0 +1,11 @@
+@extends('mail.handi.layout')
+@section('preheader', 'Changed on '.$when.' from the '.$device.'.')
+@section('eyebrow', 'Security')
+@section('heading', 'Your password was changed')
+@section('why', 'We send this every time your password changes, to keep your account safe.')
+@section('content')
+    @include('mail.handi.parts.p', ['html' => $signedOut ? 'The password for your Handi account was just changed. You’ve been signed out on your other phones.' : 'The password for your Handi account was just changed.'])
+    @include('mail.handi.parts.facts', ['rows' => ['When' => $when, 'From' => $device, 'Account' => $email]])
+    @include('mail.handi.parts.p', ['html' => '<strong style="color:#1E1B16;">Wasn’t you?</strong> Reset your password now so only you can sign in.'])
+    @include('mail.handi.parts.button', ['url' => $link, 'label' => 'Reset my password', 'outline' => true])
+@endsection

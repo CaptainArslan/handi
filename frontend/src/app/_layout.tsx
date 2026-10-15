@@ -14,11 +14,18 @@ import { APP_MAX_WIDTH, isWeb } from '@/lib/layout';
 import { linkToHref } from '@/lib/links';
 import { lastNotificationLink, onNotificationTap, registerDevice } from '@/lib/notifications';
 import { PERSISTED_QUERY_ROOTS, persister, queryClient } from '@/lib/query-client';
+import { LOADER_BG } from '@/lib/splash';
 import { useAuth } from '@/store/auth';
 import { useQueue } from '@/store/queue';
 import { C } from '@/theme/tokens';
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
+// Cross-fade from the white native splash into the loader screen instead of cutting.
+try {
+  SplashScreen.setOptions({ duration: 350, fade: true });
+} catch {
+  // older native splash module: falls back to a plain hide
+}
 
 /** Routes anyone can open. Everything else needs a session. */
 const PUBLIC = new Set(['', 'index', 'welcome', 'setup', 'signup', 'login', 'forgot-password', 'verify-code', 'reset-password', 'no-connection', 'legal', '+not-found']);
@@ -44,9 +51,18 @@ export default function RootLayout() {
     return useQueue.persist.onFinishHydration(() => setQueueReady(true));
   }, []);
 
+  // The loader screen ("/") hides the native splash itself once its first frame is drawn, so there is
+  // no blank screen in between. Any other first screen (e.g. opened from a notification) hides it here.
   useEffect(() => {
-    if (ready) SplashScreen.hideAsync().catch(() => undefined);
-  }, [ready]);
+    if (!ready) return;
+    if (first !== '' && first !== 'index') {
+      SplashScreen.hideAsync().catch(() => undefined);
+      return;
+    }
+    // Safety net: never leave the native splash up if the loader screen couldn't hide it.
+    const t = setTimeout(() => SplashScreen.hideAsync().catch(() => undefined), 4000);
+    return () => clearTimeout(t);
+  }, [ready, first]);
 
   // Auth guard: no session on a private screen → Log in; a session on a guest screen → Today.
   // (The splash screen at "/" routes itself, so it is left alone.)
@@ -82,7 +98,7 @@ export default function RootLayout() {
     <>
       <StatusBar style="dark" />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: C.bg }, animation: 'slide_from_right' }}>
-        <Stack.Screen name="index" options={{ animation: 'fade', contentStyle: { backgroundColor: '#FAF9F0' } }} />
+        <Stack.Screen name="index" options={{ animation: 'none', contentStyle: { backgroundColor: LOADER_BG } }} />
         <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
         <Stack.Screen name="welcome" options={{ animation: 'fade' }} />
         <Stack.Screen name="add-dish" options={{ animation: 'slide_from_bottom' }} />

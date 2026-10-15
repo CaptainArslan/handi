@@ -1,0 +1,12 @@
+@extends('mail.handi.layout')
+@section('preheader', 'Your kitchen is ready. Tomorrow morning you get three dishes to choose from.')
+@section('eyebrow', 'Welcome')
+@section('heading', 'Your kitchen is ready, '.$name)
+@section('why', 'You’re getting this because you created a Handi account with '.$email.'.')
+@section('content')
+    @include('mail.handi.parts.p', ['html' => 'You saved <strong style="color:#1E1B16;">'.$dishes.' '.\Illuminate\Support\Str::plural('dish', $dishes).'</strong> your family already cooks. Every morning Handi picks three of them, matched to '.($city ? '<strong style="color:#1E1B16;">'.e($city).'’s weather</strong>' : 'today’s weather').' and what you haven’t had lately.'])
+    @include('mail.handi.parts.steps')
+    @include('mail.handi.parts.button', ['url' => $link, 'label' => 'See today’s picks'])
+    @include('mail.handi.parts.note', ['html' => '<strong style="color:#1E1B16;">Tip:</strong> add your own recipes under My dishes → Add custom dish. Your reminder comes at <strong style="color:#1E1B16;">'.e($time).'</strong>; change it any time in Settings.'])
+    @include('mail.handi.parts.sig')
+@endsection

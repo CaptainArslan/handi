@@ -1,0 +1,12 @@
+@extends('mail.handi.layout')
+@section('preheader', 'Your kitchen, meals and photos have been removed.')
+@section('eyebrow', 'Account deleted')
+@section('eyebrowTone', 'warm')
+@section('heading', 'Your account is deleted')
+@section('why', 'This is the last email you’ll get from Handi at '.$email.'.')
+@section('content')
+    @include('mail.handi.parts.p', ['html' => 'We’ve removed your Handi account and everything in it:'])
+    @include('mail.handi.parts.facts', ['rows' => ['Dishes in your kitchen' => $dishes, 'Meals logged' => $meals, 'Photos' => $photos]])
+    @include('mail.handi.parts.note', ['tone' => 'mint', 'html' => 'Changed your mind? You can create a new account any time with this email. Your old dishes and history can’t be brought back.'])
+    @include('mail.handi.parts.sig', ['html' => 'Thanks for cooking with us,<br>The Handi team'])
+@endsection

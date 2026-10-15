@@ -148,7 +148,7 @@ export default function Signup() {
             onChangeText={change('name')}
             onBlur={blur('name')}
             state={state('name')}
-            placeholder="e.g. Hina Arslan"
+            placeholder="e.g. John Doe"
             autoComplete="name"
             textContentType="name"
             autoCapitalize="words"

@@ -91,6 +91,30 @@ npx eas-cli@latest login
 npx eas-cli@latest build --profile development --platform android
 ```
 
+## Installable APK (testers)
+
+Builds a standalone app that talks to the production server — no PC, Metro or cable needed. EAS builds in the cloud; it does **not** read your git-ignored `.env`, so the server address is stored in EAS once:
+
+```bash
+npm install -g eas-cli                 # or prefix each command with npx eas-cli@latest
+eas login                              # the Expo account that owns this project (captainarslan0)
+eas whoami
+
+eas env:create --environment preview --name EXPO_PUBLIC_API_BASE_URL \
+  --value https://handi.hegemonicinc.com/api/v1 --visibility plaintext
+eas env:create --environment production --name EXPO_PUBLIC_API_BASE_URL \
+  --value https://handi.hegemonicinc.com/api/v1 --visibility plaintext
+
+eas build --profile preview --platform android
+```
+
+The first build asks to create an Android keystore — answer **yes** (EAS stores it; keep using EAS so every update is signed with the same key). The build takes ~10–20 min; the link and QR code it prints download the APK. Install it on a phone (allow "Install unknown apps"), or share the link with testers.
+
+- New version: bump `version` in `app.json` for a release users should notice, then `eas build --profile preview --platform android` again.
+- Check the address EAS will use: `eas env:list --environment preview`.
+- Push notifications in the APK need Firebase (FCM) credentials uploaded in EAS (*Credentials → Android → FCM V1*); without them everything else works and the app just doesn't receive pushes.
+- Play Store: `eas build --profile production --platform android` makes the `.aab`.
+
 ## Common problems
 
 | Problem | Fix |

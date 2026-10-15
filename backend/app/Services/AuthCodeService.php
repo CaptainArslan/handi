@@ -59,7 +59,7 @@ class AuthCodeService
             'last_sent_at' => now(),
         ]);
 
-        Mail::to($email)->send(new AuthCodeMail($plain, $purpose, $name));
+        Mail::to($email)->send(new AuthCodeMail($plain, $purpose, $name, $email));
 
         return $code;
     }

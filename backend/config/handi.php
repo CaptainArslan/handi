@@ -57,4 +57,10 @@ return [
 
     'support_email' => env('HANDI_SUPPORT_EMAIL', 'support@handi.app'),
 
+    // Where email buttons take people (the app's deep links). Swap for store links if you prefer.
+    'app_links' => [
+        'today' => env('HANDI_LINK_TODAY', 'handi://today'),
+        'reset_password' => env('HANDI_LINK_RESET_PASSWORD', 'handi://forgot-password'),
+    ],
+
 ];

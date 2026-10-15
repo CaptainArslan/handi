@@ -7,7 +7,13 @@ use App\Http\Resources\UserResource;
 use App\Models\AuthCode;
 use App\Models\User;
 use App\Services\AuthCodeService;
+use App\Mail\AccountDeletedMail;
+use App\Mail\EmailChangedMail;
+use App\Mail\PasswordChangedMail;
+use App\Models\KitchenDish;
 use App\Support\Activity;
+use App\Support\Mailer;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use App\Support\Rules;
 use Dedoc\Scramble\Attributes\BodyParameter;
 use Dedoc\Scramble\Attributes\Group;
@@ -116,6 +122,7 @@ class AccountController extends Controller
         $user->forceFill(['email' => $code->email, 'email_verified_at' => now()])->save();
         $code->forceFill(['consumed_at' => now()])->save();
         Activity::log($user, 'account.email_changed', 'Changed email', null, ['from' => $old, 'to' => $code->email]);
+        Mailer::notice($old, new EmailChangedMail($old, $code->email, Mailer::when($user)));
 
         return new UserResource($user->fresh());
     }
@@ -157,6 +164,7 @@ class AccountController extends Controller
         }
 
         Activity::log($user, 'account.password_changed', 'Changed password', null, ['signed_out_other_devices' => $signOut]);
+        Mailer::notice($user->email, new PasswordChangedMail($user, Mailer::when($user), Mailer::device($request), $signOut));
 
         return response()->noContent();
     }
@@ -188,8 +196,17 @@ class AccountController extends Controller
 
         Activity::log(null, 'account.deleted', "Deleted account {$user->email}", null, ['user_id' => $user->id, 'email' => $user->email, 'name' => $user->name]);
 
+        $goodbye = new AccountDeletedMail(
+            $user->email,
+            $user->kitchenDishes()->count(),
+            $user->mealLogs()->count(),
+            Media::query()->where('model_type', (new KitchenDish)->getMorphClass())->whereIn('model_id', $user->kitchenDishes()->select('id'))->count(),
+        );
+
         $user->tokens()->delete();
         $user->delete();
+
+        Mailer::notice($goodbye->email, $goodbye);
 
         return response()->noContent();
     }

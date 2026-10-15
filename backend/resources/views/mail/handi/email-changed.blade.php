@@ -1,0 +1,10 @@
+@extends('mail.handi.layout')
+@section('preheader', 'You now sign in with '.$new.'.')
+@section('eyebrow', 'Security')
+@section('heading', 'Your sign-in email changed')
+@section('why', 'Sent to your previous sign-in email so you know about the change.')
+@section('content')
+    @include('mail.handi.parts.p', ['html' => 'From now on you sign in to Handi with your new email. This address won’t get Handi emails any more.'])
+    @include('mail.handi.parts.facts', ['rows' => ['Old email' => $old, 'New email' => $new, 'When' => $when]])
+    @include('mail.handi.parts.note', ['html' => '<strong style="color:#1E1B16;">Wasn’t you?</strong> Reply to this email or write to '.e(config('handi.support_email')).' and we’ll lock the account and help you get it back.'])
+@endsection

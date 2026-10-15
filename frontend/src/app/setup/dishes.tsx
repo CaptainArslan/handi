@@ -99,7 +99,7 @@ export default function SetupDishes() {
           value={q}
           onChangeText={(t) => setQ(t.slice(0, 40))}
           maxLength={40}
-          placeholder="Search 150+ dishes"
+          placeholder="Search dishes"
           accessibilityLabel="Search dishes"
           returnKeyType="search"
           autoCorrect={false}

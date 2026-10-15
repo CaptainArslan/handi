@@ -30,10 +30,15 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#FAF9F0",
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 220,
-          "resizeMode": "contain"
+          "backgroundColor": "#FFFFFF",
+          "image": "./assets/images/splash-logo.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "android": {
+            "backgroundColor": "#FFFFFF",
+            "image": "./assets/images/splash-logo.png",
+            "imageWidth": 200
+          }
         }
       ],
       "expo-secure-store",

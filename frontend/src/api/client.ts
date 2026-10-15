@@ -1,4 +1,6 @@
 import { AxiosError, AxiosHeaders, create, isAxiosError, type InternalAxiosRequestConfig } from 'axios';
+import * as LegacyFS from 'expo-file-system/legacy';
+import { Platform } from 'react-native';
 
 import { API_URL } from '@/lib/config';
 import { getToken } from '@/store/auth';
@@ -39,40 +41,107 @@ api.interceptors.response.use(
  */
 export async function postMultipart<T>(path: string, form: FormData, timeoutMs = 60000): Promise<T> {
   const url = `${API_URL}${path}`;
-  const token = getToken();
   const config = { url, method: 'post', headers: new AxiosHeaders() } as InternalAxiosRequestConfig;
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  let res: Response;
-  try {
-    res = await fetch(url, {
-      method: 'POST',
-      // No Content-Type: fetch adds multipart/form-data with the right boundary.
-      headers: { Accept: 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-      body: form,
-      signal: controller.signal,
-    });
-  } catch (e) {
-    throw new AxiosError(e instanceof Error ? e.message : 'Network Error', 'ERR_NETWORK', config);
-  } finally {
-    clearTimeout(timer);
+
+  // One automatic retry: mobile connections often drop the first large upload after the app was in
+  // the background (e.g. while the photo picker was open). A timeout is not retried.
+  let res: Response | null = null;
+  for (let attempt = 1; attempt <= 2 && !res; attempt++) {
+    const token = getToken();
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      res = await fetch(url, {
+        method: 'POST',
+        // No Content-Type: fetch adds multipart/form-data with the right boundary.
+        headers: { Accept: 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: form,
+        signal: controller.signal,
+      });
+    } catch (e) {
+      const timedOut = controller.signal.aborted;
+      const reason = timedOut ? `timeout of ${timeoutMs}ms exceeded` : e instanceof Error ? e.message : 'Network Error';
+      console.warn(`[upload] POST ${url} failed (attempt ${attempt}): ${reason}`);
+      if (timedOut || attempt === 2) throw new AxiosError(reason, timedOut ? 'ECONNABORTED' : 'ERR_NETWORK', config);
+      await new Promise((r) => setTimeout(r, 800));
+    } finally {
+      clearTimeout(timer);
+    }
   }
-  const text = await res.text();
+  if (!res) throw new AxiosError('Network Error', 'ERR_NETWORK', config);
+
+  return finishUpload<T>(res.status, res.statusText, await res.text(), config);
+}
+
+/** Turn an upload's raw response into data, or an AxiosError carrying the server's JSON (401 ends the session). */
+async function finishUpload<T>(statusCode: number, statusText: string, text: string, config: InternalAxiosRequestConfig): Promise<T> {
   let data: unknown = null;
   try {
     data = text ? JSON.parse(text) : null;
   } catch {
     data = { message: text.slice(0, 200) };
   }
-  if (!res.ok) {
-    const response = { data, status: res.status, statusText: res.statusText, headers: {}, config } as never;
-    if (res.status === 401 && token) {
+  if (statusCode < 200 || statusCode >= 300) {
+    const response = { data, status: statusCode, statusText, headers: {}, config } as never;
+    if (statusCode === 401 && getToken()) {
       const { endSession } = await import('@/lib/session');
       await endSession();
     }
-    throw new AxiosError(`Request failed with status code ${res.status}`, 'ERR_BAD_RESPONSE', config, null, response);
+    throw new AxiosError(`Request failed with status code ${statusCode}`, 'ERR_BAD_RESPONSE', config, null, response);
   }
   return data as T;
+}
+
+export type UploadFields = Record<string, string | string[] | null | undefined>;
+
+/**
+ * Upload one file (multipart, field `photo` by default) plus plain form fields.
+ *
+ * On phones this uses Expo's native uploader (expo-file-system), which streams the file straight from
+ * disk. It is more reliable than React Native's FormData networking, which on some Android release
+ * builds fails with "Network request failed" before the request ever reaches the server.
+ * In the browser it falls back to fetch + FormData. Errors are AxiosErrors, like every other request.
+ */
+export async function uploadFile<T>(path: string, file: { uri: string; name: string; type: string }, fields: UploadFields = {}, fieldName = 'photo'): Promise<T> {
+  if (Platform.OS === 'web') {
+    const form = new FormData();
+    for (const [k, v] of Object.entries(fields)) {
+      if (Array.isArray(v)) v.forEach((x) => form.append(`${k}[]`, x));
+      else if (v != null) form.append(k, v);
+    }
+    const blob = await (await fetch(file.uri)).blob();
+    form.append(fieldName, new File([blob], file.name, { type: file.type || blob.type }));
+    return postMultipart<T>(path, form);
+  }
+
+  const url = `${API_URL}${path}`;
+  const config = { url, method: 'post', headers: new AxiosHeaders() } as InternalAxiosRequestConfig;
+  const parameters: Record<string, string> = {};
+  for (const [k, v] of Object.entries(fields)) {
+    if (Array.isArray(v)) v.forEach((x, i) => (parameters[`${k}[${i}]`] = x));
+    else if (v != null) parameters[k] = v;
+  }
+
+  for (let attempt = 1; ; attempt++) {
+    const token = getToken();
+    try {
+      const res = await LegacyFS.uploadAsync(url, file.uri, {
+        httpMethod: 'POST',
+        uploadType: LegacyFS.FileSystemUploadType.MULTIPART,
+        fieldName,
+        mimeType: file.type || 'image/jpeg',
+        parameters,
+        headers: { Accept: 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      });
+      return finishUpload<T>(res.status, '', res.body, config);
+    } catch (e) {
+      if (isAxiosError(e)) throw e; // a real server answer (422, 413, 500…)
+      const reason = e instanceof Error ? e.message : 'Network Error';
+      console.warn(`[upload] POST ${url} failed (attempt ${attempt}): ${reason}`);
+      if (attempt >= 2) throw new AxiosError(reason, 'ERR_NETWORK', config);
+      await new Promise((r) => setTimeout(r, 800));
+    }
+  }
 }
 
 /** First message per field from a 422 response. */
@@ -102,7 +171,11 @@ export function errorMessage(error: unknown): string {
   if (isAxiosError<ValidationErrorBody & { exception?: string; file?: string; line?: number }>(error)) {
     const res = error.response;
     if (!res) {
-      const why = __DEV__ ? ` (${error.code ?? 'no response'}: ${error.config?.baseURL ?? ''}${error.config?.url ?? ''})` : '';
+      // Always say why (e.g. "Network request failed", "timeout of 15000ms exceeded") so problems can be reported;
+      // the address is added only while developing.
+      const where = __DEV__ ? ` · ${error.config?.baseURL ?? ''}${error.config?.url ?? ''}` : '';
+      const why = ` (${error.message || error.code || 'no response'}${where})`;
+      if (error.code === 'ECONNABORTED' || /timeout/i.test(error.message)) return `The server took too long to answer. Please try again.${why}`;
       return `Can’t reach Handi. Check your internet connection and try again.${why}`;
     }
     const data = res.data;

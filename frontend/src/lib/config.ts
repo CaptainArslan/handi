@@ -16,13 +16,18 @@ export const BASE_URL = raw.trim().replace(/\/+$/, '').replace(/\/api(\/v1)?$/, 
 /** e.g. http://192.168.1.20:8000/api/v1 */
 export const API_URL = `${BASE_URL}/api/v1`;
 
+/** Hosts a phone can't reach: localhost, private LAN IPs, `.test` / `.local` dev domains. */
+const LOCAL_HOST = /^https?:\/\/(?:localhost|127\.[\d.]+|10\.[\d.]+|192\.168\.[\d.]+|172\.(?:1[6-9]|2\d|3[01])\.[\d.]+|[^/:]+\.(?:test|local|localhost))(?::\d+)?(?:\/|$)/i;
+
 /**
- * Server-made links (photos) carry the backend's APP_URL, which may be `localhost`
- * or a `.test` domain the phone can't reach. Keep the path, swap the origin for BASE_URL.
+ * Server-made links (photos) carry the backend's APP_URL. In development that may be `localhost`
+ * or a `.test` domain the phone can't reach, so those get BASE_URL's origin instead (path kept).
+ * Real public URLs — the production server, a CDN or Cloudflare R2 — are used as they are.
  */
 export function mediaUrl(url: string | null | undefined): string | null {
   if (!url) return null;
   if (url.startsWith('file:') || url.startsWith('content:') || url.startsWith('data:')) return url;
+  if (/^https?:\/\//i.test(url) && !LOCAL_HOST.test(url)) return url;
   const path = url.replace(/^https?:\/\/[^/]+/i, '');
   return `${BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
 }

@@ -9,7 +9,9 @@ use App\Models\Device;
 use App\Models\User;
 use App\Services\KitchenService;
 use App\Services\NotificationService;
+use App\Mail\WelcomeMail;
 use App\Support\Activity;
+use App\Support\Mailer;
 use App\Support\Rules;
 use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
@@ -111,6 +113,7 @@ class AuthController extends Controller
             'View dishes', '/dishes', 'biryani');
 
         Activity::log($user, 'auth.registered', 'Created an account', $user, ['dishes' => $count]);
+        Mailer::notice($user->email, new WelcomeMail($user));
 
         return $this->tokenResponse($user, $data['device_name'] ?? null, 201);
     }

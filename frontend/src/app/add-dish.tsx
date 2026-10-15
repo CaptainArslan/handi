@@ -5,7 +5,7 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View
 import Animated, { ZoomIn } from 'react-native-reanimated';
 
 import { fieldErrors, errorMessage } from '@/api/client';
-import { endpoints } from '@/api/endpoints';
+import { endpoints, PhotoUploadFailed } from '@/api/endpoints';
 import { qk, useDish, useDishes } from '@/api/queries';
 import type { Cost, Effort, KitchenDishDetail, UsualMeal, WeatherTag } from '@/api/types';
 import { AiPhotoHelper } from '@/components/AiPhotoHelper';
@@ -195,6 +195,15 @@ function DishForm({ editing, initialName }: { editing: KitchenDishDetail | null;
       setSavedImg({ uri: photo?.uri ?? null, key: CATEGORY_ART[form.category] ?? 'karhi', bg: null });
       setSuccessOpen(true);
     } catch (e) {
+      if (e instanceof PhotoUploadFailed) {
+        // The dish is saved; only the photo is missing. Celebrate the dish, explain the photo.
+        invalidate(e.dish.id);
+        setSavedName(name);
+        setSavedImg({ uri: null, key: CATEGORY_ART[form.category] ?? 'karhi', bg: null });
+        setSuccessOpen(true);
+        flash({ title: `${name} saved without its photo`, sub: `${errorMessage(e.cause)} Add the photo from the dish page.`, tone: 'error' });
+        return;
+      }
       const errs = fieldErrors(e);
       if (errs.name) {
         setServerNameError(errs.name);
@@ -262,7 +271,7 @@ function DishForm({ editing, initialName }: { editing: KitchenDishDetail | null;
               }}
               onBlur={() => setTouched(true)}
               maxLength={40}
-              placeholder="e.g. Aunt Sara’s Haleem"
+              placeholder="e.g. Chicken Karahi"
               accessibilityLabel="Dish name"
               autoCapitalize="words"
               returnKeyType="done"

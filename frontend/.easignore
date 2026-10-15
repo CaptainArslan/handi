@@ -1,0 +1,21 @@
+# Same rules as the repo-root .easignore, written relative to frontend/ in case EAS reads this one.
+node_modules/
+/android/
+/ios/
+/.expo/
+/dist/
+/web-build/
+*.tgz
+*.log
+.DS_Store
+Thumbs.db
+.env
+.env.*
+!.env.example
+*.jks
+*.keystore
+*.p8
+*.p12
+*.key
+*.mobileprovision
+google-services.json
