@@ -16,7 +16,7 @@ class SiteHeaders
     {
         $response = $next($request);
 
-        $response->headers->set('Content-Security-Policy', implode('; ', [
+        $response->headers->set('Content-Security-Policy', implode('; ', array_filter([
             "default-src 'self'",
             "script-src 'none'",
             "style-src 'self' 'unsafe-inline'",
@@ -26,8 +26,10 @@ class SiteHeaders
             "frame-ancestors 'none'",
             "base-uri 'self'",
             "form-action 'self'",
-            'upgrade-insecure-requests',
-        ]));
+            // Only over HTTPS: on a plain-http local domain it would rewrite every image and font
+            // to https:// and they would fail to load.
+            $request->isSecure() ? 'upgrade-insecure-requests' : null,
+        ])));
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('X-Frame-Options', 'DENY');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');

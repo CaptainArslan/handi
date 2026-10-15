@@ -112,6 +112,13 @@ MAIL_HOST=...
 MAIL_USERNAME=...
 MAIL_PASSWORD=...
 MAIL_FROM_ADDRESS=no-reply@hegemonicinc.com
+
+# Website, admin and Telescope
+ADMIN_PATH=admin                       # admin panel URL (/admin); not linked from the website
+TELESCOPE_ALLOWED_EMAILS=admin@handi.test   # only these signed-in admins may open /telescope
+HANDI_SUPPORT_EMAIL=support@handi.app  # shown on the website, support page and emails
+HANDI_ANDROID_URL=                     # Play Store link once the app is live ("Coming soon" until then)
+HANDI_IOS_URL=                         # App Store link once the app is live
 ```
 
 `.env` is never committed. After **any** `.env` change run `php artisan config:clear` (or `php artisan optimize`) — otherwise Laravel keeps using the old cached values.
@@ -189,6 +196,38 @@ cd /var/www/handi && bash backend/deploy/deploy.sh
 
 It pulls `main`, goes into maintenance mode, runs `composer install`, migrations and caches, restarts the queue worker and comes back up. If you ever change files by hand, finish with `php artisan optimize:clear && php artisan optimize`.
 
+## 10b. Website and web app
+
+The domain serves three things from the same Laravel app:
+
+| URL | What |
+|---|---|
+| `/` | Public website (home, `/support`, `/privacy`, `/terms`, `/delete-account`, `/sitemap.xml`) |
+| `/app` | The app itself, in the browser: sign up, log in, Today, dishes, history, settings |
+| `/admin` | Admin panel (or `ADMIN_PATH`) |
+
+The web app is a build of `frontend/` that is committed to `backend/public/app`, so the server needs no Node.js. After changing the app:
+
+```bash
+cd frontend
+npm run build:web        # writes backend/public/app (shell.html, _expo/, assets/)
+git add ../backend/public/app && git commit -m "Rebuild web app"
+```
+
+It talks to the API on the same domain, so nothing has to be configured. Nginx must use the `/app` blocks in `backend/deploy/nginx.conf`.
+
+**Store listing links** (Play Console and App Store Connect):
+
+| Field | URL |
+|---|---|
+| Privacy policy | `https://handi.hegemonicinc.com/privacy` |
+| Terms of use / EULA | `https://handi.hegemonicinc.com/terms` |
+| Support URL (Apple) | `https://handi.hegemonicinc.com/support` |
+| Marketing / website | `https://handi.hegemonicinc.com` |
+| Account deletion (Google) | `https://handi.hegemonicinc.com/delete-account` |
+
+When the store pages are live, set `HANDI_ANDROID_URL` / `HANDI_IOS_URL` and run `php artisan optimize`: the website's "Coming soon" buttons become store links.
+
 ## 11. Mobile app builds (EAS)
 
 The app's server address is an EAS environment variable, set once per environment:
@@ -222,6 +261,8 @@ Push notifications on Android also need FCM credentials: EAS dashboard → Crede
 - [ ] `storage/` and `bootstrap/cache/` owned by `www-data`
 - [ ] Scheduler cron added (and the worker, if `MEDIA_QUEUE_CONVERSIONS=true`)
 - [ ] Mail configured (password-reset codes)
+- [ ] Website opens at `/`, the web app at `/app`, and images load (no mixed-content warnings)
+- [ ] `TELESCOPE_ALLOWED_EMAILS` set; store URLs set once the apps are published
 - [ ] Daily MySQL backup, e.g. `mysqldump handi | gzip > /backups/handi-$(date +%F).sql.gz` from cron, copied off the server
 
 ## 13. Troubleshooting

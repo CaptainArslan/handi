@@ -77,6 +77,16 @@ npx expo start --web            # opens http://localhost:8081
 
 Uses `http://localhost:8000/api/v1`. Handy for quick UI checks; the camera and push notifications are phone-only.
 
+## Web version on the website (/app)
+
+The website serves the same app in the browser at `https://handi.hegemonicinc.com/app`. Build it after changing the app:
+
+```bash
+npm run build:web     # exports the web app into ../backend/public/app
+```
+
+Commit `backend/public/app` and deploy the backend. The build calls the API on whatever domain it is opened from, so no URL is baked in. The camera and push notifications stay phone-only; everything else (sign up, onboarding, Today, dishes, history, settings) works the same.
+
 ## Signing in
 
 - Create an account through the app's setup flow, or

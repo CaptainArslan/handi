@@ -66,10 +66,11 @@ return [
         'ios' => env('HANDI_IOS_URL'),
     ],
 
-    // Where email buttons take people (the app's deep links). Swap for store links if you prefer.
+    // Where email buttons take people. Defaults to the web app on this domain, which works on any
+    // device; set handi://today style links instead to open the phone app.
     'app_links' => [
-        'today' => env('HANDI_LINK_TODAY', 'handi://today'),
-        'reset_password' => env('HANDI_LINK_RESET_PASSWORD', 'handi://forgot-password'),
+        'today' => env('HANDI_LINK_TODAY', rtrim((string) env('APP_URL', 'http://localhost'), '/').'/app/today'),
+        'reset_password' => env('HANDI_LINK_RESET_PASSWORD', rtrim((string) env('APP_URL', 'http://localhost'), '/').'/app/forgot-password'),
     ],
 
 ];

@@ -4,7 +4,14 @@
  *   API_URL   → {base}/api/v1   (every API call, via src/api/client.ts)
  *   mediaUrl  → photos returned by the API, re-pointed at the same base
  */
-const raw = process.env.EXPO_PUBLIC_API_BASE_URL;
+import { Platform } from 'react-native';
+
+/**
+ * The web build served by Laravel at /app (npm run build:web) talks to the server it was loaded
+ * from, so the same build works on any domain: it is built with EXPO_PUBLIC_API_BASE_URL=same-origin.
+ */
+const sameOrigin = Platform.OS === 'web' && typeof window !== 'undefined' && process.env.EXPO_PUBLIC_API_BASE_URL === 'same-origin';
+const raw = sameOrigin ? window.location.origin : process.env.EXPO_PUBLIC_API_BASE_URL;
 
 if (!raw) {
   throw new Error('EXPO_PUBLIC_API_BASE_URL is not set. Copy frontend/.env.example to frontend/.env, set it, and restart `npx expo start -c`.');

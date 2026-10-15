@@ -33,7 +33,7 @@ it('renders every email in the Handi design with a plain-text version', function
     expect($mails[1]->render())->toContain('482 913')->toContain('Expires in 15 minutes');
     expect($mails[1]->envelope()->subject)->toContain('482913');
     expect($mails[2]->render())->toContain('hina.new@example.com')->toContain('731 604');
-    expect($mails[0]->render())->toContain('See today’s picks')->toContain('handi://today');
+    expect($mails[0]->render())->toContain('See today’s picks')->toContain('/app/today');
 });
 
 it('sends a welcome email after sign-up', function () {

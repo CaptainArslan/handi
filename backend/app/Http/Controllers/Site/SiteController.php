@@ -52,6 +52,11 @@ class SiteController extends Controller
         ]);
     }
 
+    public function support(): View
+    {
+        return view('site.support');
+    }
+
     public function deleteAccount(): View
     {
         return view('site.delete-account');
@@ -59,7 +64,7 @@ class SiteController extends Controller
 
     public function sitemap(): Response
     {
-        $urls = [route('site.home'), route('site.privacy'), route('site.terms'), route('site.delete-account')];
+        $urls = [route('site.home'), route('site.privacy'), route('site.terms'), route('site.support'), route('site.delete-account')];
 
         return response()
             ->view('site.sitemap', ['urls' => $urls, 'updated' => config('legal.updated_at')])
@@ -70,7 +75,7 @@ class SiteController extends Controller
     public static function art(): array
     {
         return collect(['biryani', 'karahi', 'lentils', 'bhindi', 'qeema', 'paratha', 'karhi', 'aloogobi', 'fish'])
-            ->mapWithKeys(fn (string $k) => [$k => ['bg' => Media::artBg($k), 'src' => asset("images/site/{$k}-160.webp"), 'src2x' => asset("images/site/{$k}-320.webp")]])
+            ->mapWithKeys(fn (string $k) => [$k => ['bg' => Media::artBg($k), 'src' => asset("images/site/{$k}-160.webp"), 'src2x' => asset("images/site/{$k}-320.webp"), 'lg' => asset("images/site/{$k}-240.webp"), 'lg2x' => asset("images/site/{$k}-480.webp")]])
             ->all();
     }
 }

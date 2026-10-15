@@ -396,7 +396,7 @@ handi/
 │   │   └── Support/                   Rules, Activity, CatalogCache, Media helpers
 │   ├── database/migrations · seeders
 │   ├── routes/api.php · console.php
-│   └── tests/Feature                  70 Pest tests
+│   └── tests/Feature                  110 Pest tests
 ├── frontend/                    Expo app
 │   └── src/
 │       ├── app/                 screens (Expo Router)
@@ -483,6 +483,11 @@ Every secret and setting lives in `.env`, which is git-ignored. `backend/.env.ex
 | `EXPO_PUSH_URL`, `EXPO_ACCESS_TOKEN` | Push notifications |
 | `TELESCOPE_ENABLED` | Telescope on or off (off in production by default) |
 | `TRUSTED_PROXIES` | `*` behind ngrok, Herd Share or a load balancer |
+| `ADMIN_PATH` | Admin panel URL (default `/admin`), never linked from the website |
+| `TELESCOPE_ALLOWED_EMAILS` | Admins allowed to open Telescope (default `admin@handi.test`) |
+| `HANDI_SUPPORT_EMAIL` | Support address on the website and in emails |
+| `HANDI_ANDROID_URL`, `HANDI_IOS_URL` | Store links on the website ("Coming soon" while empty) |
+| `HANDI_LINK_TODAY`, `HANDI_LINK_RESET_PASSWORD` | Email buttons (default: the web app at `/app/...`) |
 | `EXPO_PUBLIC_API_BASE_URL` (app) | The only app setting |
 
 ---
@@ -490,7 +495,7 @@ Every secret and setting lives in `.env`, which is git-ignored. `backend/.env.ex
 ## Testing and quality
 
 ```bash
-cd backend && php artisan test          # 77 Pest tests: every endpoint, pick rules, sync, admin pages, media
+cd backend && php artisan test          # 110 Pest tests: every endpoint, pick rules, sync, admin, website, web app, emails
 cd frontend && npm run typecheck && npm run lint
 ```
 
@@ -500,4 +505,4 @@ CI (`.github/workflows/ci.yml`) runs the backend tests on PHP 8.2 and the app's 
 
 ## Deployment
 
-Production runs at **https://handi.hegemonicinc.com** (API `/api/v1`, admin `/admin`). See [`docs/deployment.md`](docs/deployment.md) for the server setup (Nginx, PHP 8.2+ FPM, scheduler, queue worker, S3/R2 storage) and for EAS builds of the app.
+Production runs at **https://handi.hegemonicinc.com**: website `/`, the app in the browser `/app`, API `/api/v1`, admin `/admin`. See [`docs/deployment.md`](docs/deployment.md) for the server setup (Nginx, PHP 8.2+ FPM, scheduler, queue worker, S3/R2 storage) and for EAS builds of the app.

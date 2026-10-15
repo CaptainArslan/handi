@@ -11,9 +11,9 @@
         <p class="summary">Deleting your account removes your kitchen, dishes, photos, meal history, reminders and sign-ins. It can’t be undone.</p>
 
         <section>
-            <h2>In the app (fastest)</h2>
+            <h2>In the app or on the web (fastest)</h2>
             <ol>
-                <li>Open Handi and go to <b>Settings</b>.</li>
+                <li>Open Handi on your phone, or <a href="{{ url('/app/login') }}">log in on the web</a>, and go to <b>Settings</b>.</li>
                 <li>Tap <b>Delete account</b>.</li>
                 <li>Enter your password and type <b>DELETE</b> to confirm.</li>
             </ol>
@@ -21,7 +21,7 @@
         </section>
 
         <section>
-            <h2>Without the app</h2>
+            <h2>By email</h2>
             <div class="card">
                 <p>Email <a href="mailto:{{ $support }}?subject=Delete%20my%20Handi%20account">{{ $support }}</a> from the address you signed up with, with the subject <span class="copy">Delete my Handi account</span>.</p>
                 <p class="muted">We reply to confirm it’s you, then delete the account within 7 days.</p>

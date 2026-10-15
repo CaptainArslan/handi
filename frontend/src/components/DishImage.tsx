@@ -6,15 +6,15 @@ import { C, tokens } from '@/theme/tokens';
 
 /** The design's illustrations, bundled so pictures work offline. */
 export const ART = {
-  lentils: require('../../assets/dishes/lentils.png'),
-  bhindi: require('../../assets/dishes/bhindi.png'),
-  karahi: require('../../assets/dishes/karahi.png'),
-  biryani: require('../../assets/dishes/biryani.png'),
-  qeema: require('../../assets/dishes/qeema.png'),
-  fish: require('../../assets/dishes/fish.png'),
-  paratha: require('../../assets/dishes/paratha.png'),
-  karhi: require('../../assets/dishes/karhi.png'),
-  aloogobi: require('../../assets/dishes/aloogobi.png'),
+  lentils: require('../../assets/dishes/lentils.webp'),
+  bhindi: require('../../assets/dishes/bhindi.webp'),
+  karahi: require('../../assets/dishes/karahi.webp'),
+  biryani: require('../../assets/dishes/biryani.webp'),
+  qeema: require('../../assets/dishes/qeema.webp'),
+  fish: require('../../assets/dishes/fish.webp'),
+  paratha: require('../../assets/dishes/paratha.webp'),
+  karhi: require('../../assets/dishes/karhi.webp'),
+  aloogobi: require('../../assets/dishes/aloogobi.webp'),
 } as const;
 
 export type ArtKey = keyof typeof ART;

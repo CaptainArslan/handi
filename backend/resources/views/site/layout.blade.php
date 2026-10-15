@@ -1,7 +1,7 @@
-{{-- Public website layout. Same palette and type as the app. No JavaScript; CSS is inlined (≈14 KB) so the first paint needs one request. --}}
+{{-- Public website layout. Same palette and type as the app. No JavaScript (animations are CSS); CSS is inlined so the first paint needs one request. --}}
 @php
     $title = trim($__env->yieldContent('title')) ?: 'Handi — Aaj kya pakaen? 3 dishes every morning';
-    $description = trim($__env->yieldContent('description')) ?: 'Handi suggests three dishes your family already cooks every morning, matched to today’s weather and what you haven’t had lately. Free for Android.';
+    $description = trim($__env->yieldContent('description')) ?: 'Handi suggests three dishes your family already cooks every morning, matched to today’s weather and what you haven’t had lately. Free on the web, Android and iPhone.';
     $canonical = url()->current();
 @endphp
 <!DOCTYPE html>
@@ -51,7 +51,8 @@
                 <li><a href="{{ route('site.home') }}#dishes">Dishes</a></li>
                 <li><a href="{{ route('site.home') }}#faq">FAQ</a></li>
             </ul>
-            <a class="btn btn-primary" href="{{ route('site.home') }}#download">Get the app</a>
+            <a class="nav-login" href="{{ url('/app/login') }}">Log in</a>
+            <a class="btn btn-primary" href="{{ url('/app/welcome') }}">Get started</a>
             <details class="menu">
                 <summary aria-label="Open menu">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
@@ -62,6 +63,8 @@
                     <a href="{{ route('site.home') }}#dishes">Dishes</a>
                     <a href="{{ route('site.home') }}#faq">FAQ</a>
                     <a href="{{ route('site.home') }}#download">Get the app</a>
+                    <a href="{{ url('/app/login') }}">Log in</a>
+                    <a class="menu-cta" href="{{ url('/app/welcome') }}">Get started — it’s free</a>
                 </div>
             </details>
         </nav>
@@ -80,6 +83,7 @@
                         <b>Handi</b>
                     </a>
                     <p class="foot-about">Three dishes every morning, from your own kitchen. Made in Pakistan for home cooks.</p>
+                    @include('site.parts.stores', ['tone' => 'light'])
                 </div>
                 <div>
                     <h3>Product</h3>
@@ -87,11 +91,14 @@
                         <li><a href="{{ route('site.home') }}#how">How it works</a></li>
                         <li><a href="{{ route('site.home') }}#setup">Set up</a></li>
                         <li><a href="{{ route('site.home') }}#faq">FAQ</a></li>
+                        <li><a href="{{ url('/app/welcome') }}">Use Handi on the web</a></li>
+                        <li><a href="{{ url('/app/login') }}">Log in</a></li>
                     </ul>
                 </div>
                 <div>
                     <h3>Help</h3>
                     <ul>
+                        <li><a href="{{ route('site.support') }}">Support</a></li>
                         <li><a href="{{ route('site.privacy') }}">Privacy policy</a></li>
                         <li><a href="{{ route('site.terms') }}">Terms of use</a></li>
                         <li><a href="{{ route('site.delete-account') }}">Delete your account</a></li>
