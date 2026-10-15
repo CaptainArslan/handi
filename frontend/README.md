@@ -37,6 +37,7 @@ Set the one value the app needs, `EXPO_PUBLIC_API_BASE_URL`, for where the app w
 | Real phone on the same Wi-Fi | `http://<your PC's LAN IP>:8000/api/v1` (find it with `ipconfig`; allow port 8000 in Windows Firewall) |
 | Web, same PC | `http://localhost:8000/api/v1` |
 | Anywhere, through ngrok | `https://<id>.ngrok-free.app/api/v1` |
+| Production server | `https://handi.hegemonicinc.com/api/v1` |
 
 `10.0.2.2` is the emulator's name for your PC — `localhost` or a `.test` domain does not work from the emulator or a phone. Every API call and image URL is built from this value (`src/lib/config.ts`); `/api/v1` is added if you leave it off. `.env` is git-ignored, and `EXPO_PUBLIC_*` values are bundled into the app, so never put secrets in it.
 
@@ -158,7 +159,7 @@ src/
     ```
 - **EAS environments:** `eas.json` has `development`, `preview` and `production` profiles. Store the API address per environment instead of in a committed file:
   ```bash
-  npx eas-cli@latest env:create --environment preview --name EXPO_PUBLIC_API_BASE_URL --value https://staging-api.example.com/api/v1 --visibility plaintext
-  npx eas-cli@latest env:create --environment production --name EXPO_PUBLIC_API_BASE_URL --value https://api.example.com/api/v1 --visibility plaintext
+  npx eas-cli@latest env:create --environment preview --name EXPO_PUBLIC_API_BASE_URL --value https://handi.hegemonicinc.com/api/v1 --visibility plaintext
+  npx eas-cli@latest env:create --environment production --name EXPO_PUBLIC_API_BASE_URL --value https://handi.hegemonicinc.com/api/v1 --visibility plaintext
   ```
   `EXPO_PUBLIC_*` values are bundled into the app, so never put secrets in them.

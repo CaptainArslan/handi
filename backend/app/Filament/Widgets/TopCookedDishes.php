@@ -23,7 +23,10 @@ class TopCookedDishes extends TableWidget
                 ->where('date', '>=', now()->subDays(30)->toDateString())
                 ->groupBy('dish_name', 'category_key')
                 ->orderByDesc('times')
+                ->orderBy('dish_name')
                 ->limit(5))
+            // Grouped query: Filament's extra "order by meal_logs.id" breaks MySQL's ONLY_FULL_GROUP_BY.
+            ->defaultKeySort(false)
             ->paginated(false)
             ->columns([
                 TextColumn::make('dish_name')->label('Dish')->weight('semibold')

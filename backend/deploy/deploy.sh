@@ -15,6 +15,7 @@ php artisan migrate --force
 php artisan storage:link || true
 php artisan filament:optimize
 php artisan optimize               # config, routes, views, events cache
+php artisan queue:restart || true  # workers pick up the new code
 
 php artisan up
 echo "Deployed $(git rev-parse --short HEAD)"

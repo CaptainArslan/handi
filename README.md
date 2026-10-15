@@ -451,6 +451,7 @@ npx expo start                      # day to day; press "a" for Android, "r" to 
 | Phone on the same Wi-Fi | `http://<PC LAN IP>:8000/api/v1` |
 | Web / same PC | `http://localhost:8000/api/v1` |
 | Through ngrok | `https://<id>.ngrok-free.app/api/v1` (set `TRUSTED_PROXIES=*` in the backend) |
+| Production server | `https://handi.hegemonicinc.com/api/v1` |
 
 Restart with `npx expo start -c` after changing `.env`. Sign in with the demo user, or create an account through the app.
 
@@ -499,4 +500,4 @@ CI (`.github/workflows/ci.yml`) runs the backend tests on PHP 8.2 and the app's 
 
 ## Deployment
 
-See [`docs/deployment.md`](docs/deployment.md) for the server setup (Nginx, PHP 8.2-FPM, scheduler, queue worker, S3/R2 storage) and for EAS builds of the app.
+Production runs at **https://handi.hegemonicinc.com** (API `/api/v1`, admin `/admin`). See [`docs/deployment.md`](docs/deployment.md) for the server setup (Nginx, PHP 8.2+ FPM, scheduler, queue worker, S3/R2 storage) and for EAS builds of the app.
