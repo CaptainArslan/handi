@@ -19,6 +19,14 @@ return [
     'enabled' => env('TELESCOPE_ENABLED', false),
 
     /*
+    | Only these signed-in admin accounts can open Telescope (comma-separated emails).
+    */
+    'allowed_emails' => array_values(array_filter(array_map(
+        fn ($e) => strtolower(trim($e)),
+        explode(',', (string) env('TELESCOPE_ALLOWED_EMAILS', 'admin@handi.test'))
+    ))),
+
+    /*
     |--------------------------------------------------------------------------
     | Telescope Domain
     |--------------------------------------------------------------------------

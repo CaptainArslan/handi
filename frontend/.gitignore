@@ -46,3 +46,7 @@ example
 .env
 .env.*
 !.env.example
+
+# Firebase config for push (kept out of git; EAS uploads it via .easignore)
+google-services.json
+*firebase-adminsdk*.json

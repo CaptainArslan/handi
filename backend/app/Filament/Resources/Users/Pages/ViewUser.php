@@ -44,8 +44,9 @@ class ViewUser extends ViewRecord
                     Notification::make()->title('Signed out on every phone')->success()->send();
                 }),
             DeleteAction::make()
+                ->hidden(fn (User $record) => $record->is(auth()->user())) // admins can't delete themselves
                 ->modalDescription('Deletes the account and all its data (kitchen, dishes, history, notifications). This can’t be undone.')
-                ->before(fn (User $record) => Activity::log(null, 'admin.user_deleted', "Deleted account {$record->email}", null, ['by' => auth()->user()?->email, 'user_id' => $record->id])),
+                ->before(fn (User $record) => Activity::log(null, 'admin.user_deleted', 'Deleted account '.$record->maskedEmail(), null, ['by' => auth()->user()?->email, 'user_id' => $record->id])),
             ])->label('More')->icon('heroicon-m-ellipsis-vertical')->color('gray')->button(),
         ];
     }

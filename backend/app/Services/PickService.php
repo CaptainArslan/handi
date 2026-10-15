@@ -52,12 +52,16 @@ class PickService
     {
         $pick = $this->today($user);
 
-        if ($this->shufflesLeft($pick) <= 0) {
+        // Claim one shuffle atomically, so parallel taps can't go past the daily limit.
+        $claimed = DailyPick::whereKey($pick->id)
+            ->where('shuffles_used', '<', (int) config('handi.picks.shuffles_per_day', 5))
+            ->increment('shuffles_used');
+        if ($claimed === 0) {
             throw new RuntimeException('No shuffles left today');
         }
+        $pick->refresh();
 
         $current = $pick->dishIds();
-        $pick->shuffles_used++;
         $pick->set_number++;
 
         return $this->generate($user, $pick->date, $pick, exclude: $current);
@@ -155,12 +159,17 @@ class PickService
             return $pick;
         }
 
-        return DailyPick::create($attributes + [
-            'user_id' => $user->id,
-            'date' => $date,
-            'set_number' => 0,
-            'shuffles_used' => 0,
-        ]);
+        try {
+            return DailyPick::create($attributes + [
+                'user_id' => $user->id,
+                'date' => $date,
+                'set_number' => 0,
+                'shuffles_used' => 0,
+            ]);
+        } catch (\Illuminate\Database\UniqueConstraintViolationException) {
+            // Another request (app + reminder at the same moment) created today's pick first: use that one.
+            return DailyPick::where('user_id', $user->id)->where('date', $date->toDateString())->firstOrFail();
+        }
     }
 
     private function settings(Kitchen $kitchen): array

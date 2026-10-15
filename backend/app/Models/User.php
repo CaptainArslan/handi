@@ -98,4 +98,16 @@ class User extends Authenticatable implements FilamentUser
 
         return Str::substr($local, 0, 1).'***@'.$domain;
     }
+
+    /**
+     * Deleting a user (app or admin) also removes what database cascades can't: dish photos
+     * (media-library rows + files have no foreign key) and API tokens (polymorphic).
+     */
+    protected static function booted(): void
+    {
+        static::deleting(function (User $user): void {
+            $user->kitchenDishes()->each(fn (KitchenDish $dish) => $dish->clearMediaCollection($dish->photoCollection()));
+            $user->tokens()->delete();
+        });
+    }
 }

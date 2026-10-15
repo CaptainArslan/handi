@@ -88,17 +88,34 @@ class MealController extends Controller
 
         $dish = KitchenDish::withDetails()->where('user_id', $user->id)->findOrFail($data['kitchen_dish_id']);
 
-        $duplicate = MealLog::where('user_id', $user->id)
-            ->where('kitchen_dish_id', $dish->id)
-            ->where('date', $data['date'])
-            ->where('meal', $data['meal'])
-            ->first();
+        // Lock per user so a double tap or an offline sync racing an online log can't create two rows.
+        $lock = \Illuminate\Support\Facades\Cache::lock('meal-log:'.$user->id, 10);
+        $lock->block(5);
 
-        if ($duplicate) {
-            return $this->respond($request, $duplicate, 200, true);
+        try {
+            $duplicate = MealLog::where('user_id', $user->id)
+                ->where('kitchen_dish_id', $dish->id)
+                ->where('date', $data['date'])
+                ->where('meal', $data['meal'])
+                ->first();
+
+            if ($duplicate) {
+                return $this->respond($request, $duplicate, 200, true);
+            }
+
+            $log = $this->createLog($user, $dish, $data);
+        } finally {
+            $lock->release();
         }
 
-        $log = MealLog::create([
+        Activity::log($user, 'meal.logged', "Logged {$log->dish_name} for {$log->meal->value} on {$data['date']}", $log, ['source' => $log->source->value]);
+
+        return $this->respond($request, $log, 201, false);
+    }
+
+    private function createLog(\App\Models\User $user, KitchenDish $dish, array $data): MealLog
+    {
+        return MealLog::create([
             'id' => $data['id'] ?? null,
             'user_id' => $user->id,
             'kitchen_dish_id' => $dish->id,
@@ -109,10 +126,6 @@ class MealController extends Controller
             'source' => $data['source'] ?? 'manual',
             'logged_at' => now(),
         ]);
-
-        Activity::log($user, 'meal.logged', "Logged {$log->dish_name} for {$log->meal->value} on {$data['date']}", $log, ['source' => $log->source->value]);
-
-        return $this->respond($request, $log, 201, false);
     }
 
     /**

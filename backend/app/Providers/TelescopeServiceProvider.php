@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Laravel\Sentinel\Drivers\Driver;
 use Laravel\Sentinel\Sentinel;
-use Symfony\Component\HttpFoundation\IpUtils;
 use Laravel\Telescope\IncomingEntry;
 use Laravel\Telescope\Telescope;
 use Laravel\Telescope\TelescopeApplicationServiceProvider;
@@ -16,10 +15,10 @@ use Laravel\Telescope\TelescopeApplicationServiceProvider;
  * Laravel Telescope — request, query, exception, job, mail and log inspector at /telescope.
  *
  * - On/off with TELESCOPE_ENABLED in .env (off in tests and, by default, in production).
- * - Locally it records everything and is open on the machine; elsewhere it records only
- *   problems (exceptions, failed requests/jobs, scheduled tasks) and only super admins can open it.
+ * - Locally it records everything; elsewhere it records only problems (exceptions, failed
+ *   requests/jobs, scheduled tasks).
+ * - Only the admin accounts in TELESCOPE_ALLOWED_EMAILS (default admin@handi.test) can open it.
  * - Passwords, tokens and reset codes are never stored.
- * - Through a tunnel (ngrok, Herd Share/Expose) it is never open: sign in at /admin as a super admin first.
  */
 class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
 {
@@ -63,30 +62,26 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
     }
 
     /**
-     * Who may open /telescope outside the local environment: signed-in super admins
-     * (sign in at /admin first — it uses the same session).
+     * Who may open /telescope: only signed-in super admins whose email is in
+     * TELESCOPE_ALLOWED_EMAILS (default admin@handi.test). Sign in at the admin panel first —
+     * it uses the same session. There is no "open on localhost" exception.
      */
     protected function gate(): void
     {
-        Gate::define('viewTelescope', fn (?User $user = null) => (bool) $user?->is_admin);
+        Gate::define('viewTelescope', fn (?User $user = null) => self::allowed($user));
     }
 
-    /**
-     * Open without login only on this machine in local mode (a direct request, no proxy/tunnel
-     * headers, from a private IP). Everyone else — any tunnel, any non-local environment — must be
-     * a signed-in super admin.
-     */
     protected function authorization(): void
     {
         $this->gate();
 
-        Telescope::auth(function (Request $request): bool {
-            $direct = $this->app->environment('local')
-                && ! $request->headers->has('X-Forwarded-For')
-                && ! $request->headers->has('X-Forwarded-Host')
-                && IpUtils::isPrivateIp((string) $request->server('REMOTE_ADDR'));
+        Telescope::auth(fn (Request $request): bool => Gate::forUser($request->user())->allows('viewTelescope'));
+    }
 
-            return $direct || Gate::forUser($request->user())->allows('viewTelescope');
-        });
+    public static function allowed(?User $user): bool
+    {
+        return $user !== null
+            && $user->is_admin
+            && in_array(strtolower($user->email), config('telescope.allowed_emails', []), true);
     }
 }

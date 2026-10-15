@@ -51,6 +51,9 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('auth', fn (Request $request) => Limit::perMinute(20)->by('auth:'.$request->ip()));
 
+        // Sensitive signed-in actions that send email codes or pushes: a few per hour per user.
+        RateLimiter::for('sensitive', fn (Request $request) => Limit::perHour(10)->by('sensitive:'.($request->user('sanctum')?->getKey() ?? $request->ip())));
+
         // Interactive API docs (/docs/api): open locally, super admins only elsewhere.
         Scramble::configure()->withDocumentTransformers(function (OpenApi $openApi) {
             $openApi->secure(SecurityScheme::http('bearer'));

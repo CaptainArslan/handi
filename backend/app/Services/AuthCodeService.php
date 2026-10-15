@@ -75,13 +75,14 @@ class AuthCodeService
             return ['status' => self::EXPIRED];
         }
 
-        if ($code->attempts_left <= 0) {
+        // Use up one attempt BEFORE checking, atomically, so parallel guesses can't exceed the limit.
+        $claimed = AuthCode::whereKey($code->id)->where('attempts_left', '>', 0)->decrement('attempts_left');
+        if ($claimed === 0) {
             return ['status' => self::LOCKED, 'attempts_left' => 0];
         }
+        $code->refresh();
 
         if (! Hash::check($plain, $code->code_hash)) {
-            $code->decrement('attempts_left');
-
             return $code->attempts_left <= 0
                 ? ['status' => self::LOCKED, 'attempts_left' => 0]
                 : ['status' => self::WRONG, 'attempts_left' => $code->attempts_left];

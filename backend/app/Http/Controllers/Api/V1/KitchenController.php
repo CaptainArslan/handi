@@ -127,6 +127,12 @@ class KitchenController extends Controller
             'name' => ['nullable', 'string', 'max:100'],
         ]);
 
+        // One phone belongs to whoever is signed in on it now (a shared family phone can switch accounts).
+        // Its push token is removed from every other row, so a phone never gets another account's reminders.
+        if (! empty($data['expo_push_token'])) {
+            Device::where('expo_push_token', $data['expo_push_token'])->where('device_id', '!=', $data['device_id'])->update(['expo_push_token' => null]);
+        }
+
         $device = Device::updateOrCreate(['device_id' => $data['device_id']], [
             'user_id' => $request->user()->id,
             'personal_access_token_id' => \App\Support\Tokens::currentId($request->user()),

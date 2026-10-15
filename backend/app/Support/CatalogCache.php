@@ -34,6 +34,8 @@ class CatalogCache
 
     public static function flush(): void
     {
-        Cache::forever(self::VERSION_KEY, self::version() + 1);
+        // Atomic, so two admins saving at once can't both write the same version.
+        Cache::add(self::VERSION_KEY, 1);
+        Cache::increment(self::VERSION_KEY);
     }
 }

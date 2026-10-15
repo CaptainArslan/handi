@@ -54,7 +54,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('/', [AccountController::class, 'show'])->name('show');
             Route::patch('/', [AccountController::class, 'update'])->name('update');
             Route::delete('/', [AccountController::class, 'destroy'])->name('destroy');
-            Route::post('email/verify', [AccountController::class, 'verifyEmail'])->name('email.verify');
+            Route::post('email/verify', [AccountController::class, 'verifyEmail'])->middleware('throttle:sensitive')->name('email.verify');
             Route::put('password', [AccountController::class, 'password'])->name('password');
 
             // Kitchen settings
@@ -102,7 +102,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::post('notifications/{id}/restore', [NotificationController::class, 'restore'])->whereNumber('id')->name('notifications.restore');
             Route::get('notification-settings', [KitchenController::class, 'notificationSettings'])->name('notification-settings.show');
             Route::put('notification-settings', [KitchenController::class, 'updateNotificationSettings'])->name('notification-settings.update');
-            Route::post('notification-settings/test', [KitchenController::class, 'testNotification'])->name('notification-settings.test');
+            Route::post('notification-settings/test', [KitchenController::class, 'testNotification'])->middleware('throttle:sensitive')->name('notification-settings.test');
         });
     });
 });

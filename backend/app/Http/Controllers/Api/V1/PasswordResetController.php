@@ -135,11 +135,17 @@ class PasswordResetController extends Controller
             return response()->json(['message' => 'This reset link has expired. Request a new code.', 'errors' => ['reset_token' => ['This reset link has expired. Request a new code.']]], 422);
         }
 
+        // Use the token exactly once, atomically: a second parallel request gets "expired".
+        if (\App\Models\AuthCode::whereKey($code->id)->whereNull('consumed_at')->update(['consumed_at' => now()]) === 0) {
+            return response()->json(['message' => 'This reset link has expired. Request a new code.', 'errors' => ['reset_token' => ['This reset link has expired. Request a new code.']]], 422);
+        }
+
         $user = $code->user;
-        $user->forceFill(['password' => $data['password'], 'password_changed_at' => now()])->save();
-        $user->tokens()->delete();
-        $user->devices()->delete();
-        $code->forceFill(['consumed_at' => now()])->save();
+        \Illuminate\Support\Facades\DB::transaction(function () use ($user, $data) {
+            $user->forceFill(['password' => $data['password'], 'password_changed_at' => now()])->save();
+            $user->tokens()->delete();
+            $user->devices()->delete();
+        });
 
         Activity::log($user, 'auth.password_reset', 'Reset the password with an email code');
         Mailer::notice($user->email, new PasswordChangedMail($user, Mailer::when($user), Mailer::device($request), true));

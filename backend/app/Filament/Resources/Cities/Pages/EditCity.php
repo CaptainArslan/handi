@@ -12,6 +12,11 @@ class EditCity extends EditRecord
 
     protected function getHeaderActions(): array
     {
-        return [DeleteAction::make()];
+        return [
+            // Kitchens point at their city for weather; deleting one in use would silently clear their location.
+            DeleteAction::make()
+                ->disabled(fn () => \App\Models\Kitchen::where('city_id', $this->record->getKey())->exists())
+                ->tooltip(fn () => \App\Models\Kitchen::where('city_id', $this->record->getKey())->exists() ? 'Kitchens use this city. Turn it off instead.' : null),
+        ];
     }
 }

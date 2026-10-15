@@ -55,7 +55,16 @@ return [
         'password' => env('ADMIN_PASSWORD'),
     ],
 
+    // Admin panel URL path (https://your-domain/{admin_path}). Not linked from the website.
+    'admin_path' => env('ADMIN_PATH', 'admin'),
+
     'support_email' => env('HANDI_SUPPORT_EMAIL', 'support@handi.app'),
+
+    // Store pages shown on the website. Leave empty until the app is live ("Coming soon" is shown instead).
+    'store_links' => [
+        'android' => env('HANDI_ANDROID_URL'),
+        'ios' => env('HANDI_IOS_URL'),
+    ],
 
     // Where email buttons take people (the app's deep links). Swap for store links if you prefer.
     'app_links' => [

@@ -16,6 +16,21 @@ class EditUser extends EditRecord
         return [ViewAction::make()];
     }
 
+    /** `is_admin` isn't mass-assignable (so the API can never set it); save it explicitly here. */
+    protected function handleRecordUpdate(\Illuminate\Database\Eloquent\Model $record, array $data): \Illuminate\Database\Eloquent\Model
+    {
+        $makeAdmin = array_key_exists('is_admin', $data) ? (bool) $data['is_admin'] : null;
+        unset($data['is_admin']);
+
+        $record->update($data);
+
+        if ($makeAdmin !== null && ! $record->is(auth()->user())) {
+            $record->forceFill(['is_admin' => $makeAdmin])->save();
+        }
+
+        return $record;
+    }
+
     protected function afterSave(): void
     {
         $password = $this->form->getRawState()['new_password'] ?? null;

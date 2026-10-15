@@ -31,13 +31,13 @@ class PreviewController extends Controller
     public function __invoke(Request $request, PickService $picks, WeatherService $weather, KitchenService $kitchens): JsonResponse
     {
         $data = $request->validate([
-            'dish_ids' => ['required', 'array', 'min:1'],
+            'dish_ids' => ['required', 'array', 'min:1', 'max:500'],
             'dish_ids.*' => ['integer'],
             'location' => ['nullable', 'array'],
             'location.mode' => ['required_with:location', Rule::in(['gps', 'city'])],
             'location.city_id' => ['required_if:location.mode,city', 'nullable', 'integer', 'exists:cities,id'],
-            'location.lat' => ['required_if:location.mode,gps', 'nullable', 'numeric'],
-            'location.lng' => ['required_if:location.mode,gps', 'nullable', 'numeric'],
+            'location.lat' => ['required_if:location.mode,gps', 'nullable', 'numeric', 'between:-90,90'],
+            'location.lng' => ['required_if:location.mode,gps', 'nullable', 'numeric', 'between:-180,180'],
             ...Rules::kitchen(partial: true),
         ], Rules::kitchenMessages());
 

@@ -1,0 +1,12 @@
+{
+  "name": "Handi — What to Cook",
+  "short_name": "Handi",
+  "icons": [
+    { "src": "/images/site/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/images/site/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ],
+  "theme_color": "#FBF7F1",
+  "background_color": "#FBF7F1",
+  "display": "browser",
+  "start_url": "/"
+}

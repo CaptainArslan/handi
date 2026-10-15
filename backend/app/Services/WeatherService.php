@@ -45,12 +45,19 @@ class WeatherService
         $key = "weather:{$lat},{$lng}";
 
         $data = Cache::get($key);
+        if (($data['unavailable'] ?? false) === true) {
+            $data = null;
+            $cachedMiss = true;
+        }
 
-        if (! $data) {
+        if (! $data && ! ($cachedMiss ?? false)) {
             $data = $this->fetch($lat, $lng);
 
             if ($data) {
                 Cache::put($key, $data, now()->addMinutes((int) config('handi.weather.cache_minutes', 60)));
+            } else {
+                // Provider down: remember the miss for 5 minutes so every request doesn't wait for the timeout again.
+                Cache::put($key, ['unavailable' => true], now()->addMinutes(5));
             }
         }
 

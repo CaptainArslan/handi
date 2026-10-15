@@ -55,7 +55,7 @@ class AuthController extends Controller
             'location.city_id' => ['required_if:location.mode,city', 'nullable', 'integer', 'exists:cities,id'],
             'location.lat' => ['required_if:location.mode,gps', 'nullable', 'numeric', 'between:-90,90'],
             'location.lng' => ['required_if:location.mode,gps', 'nullable', 'numeric', 'between:-180,180'],
-            'dish_ids' => ['present', 'array'],
+            'dish_ids' => ['present', 'array', 'max:500'],
             'dish_ids.*' => ['integer', 'distinct', 'exists:dishes,id'],
             'custom_dishes' => ['nullable', 'array', 'max:50'],
             'custom_dishes.*.name' => ['required', 'string', 'min:2', 'max:40', 'regex:'.Rules::DISH_NAME_REGEX],
@@ -152,10 +152,24 @@ class AuthController extends Controller
             ], 429);
         }
 
-        $user = User::where('email', $data['email'])->first();
+        // Second limit per email across all IPs, so one account can't be brute-forced from many addresses.
+        $emailKey = 'login-email:'.$data['email'];
+        if (RateLimiter::tooManyAttempts($emailKey, 20)) {
+            $seconds = RateLimiter::availableIn($emailKey);
 
-        if (! $user || ! Hash::check($data['password'], $user->password)) {
+            return response()->json([
+                'message' => "Too many attempts. For your safety, try again in {$seconds}s, or reset your password.",
+                'retry_after' => $seconds,
+            ], 429);
+        }
+
+        $user = User::where('email', $data['email'])->first();
+        // Same work whether or not the email exists, so response time doesn't reveal registered emails.
+        $passwordOk = Hash::check($data['password'], $user?->password ?? '$2y$12$'.str_repeat('a', 53));
+
+        if (! $user || ! $passwordOk) {
             RateLimiter::hit($key, (int) config('handi.auth.lockout_seconds', 60));
+            RateLimiter::hit($emailKey, 3600);
             $left = max(0, $max - RateLimiter::attempts($key));
 
             if ($user) {

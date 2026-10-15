@@ -65,12 +65,13 @@ class UserResource extends Resource
             Section::make('Account')->icon('heroicon-o-user-circle')->description('Name, sign-in email and timezone used for “today”.')->columns(2)->schema([
                 TextInput::make('name')->required()->maxLength(50)->prefixIcon('heroicon-m-user'),
                 TextInput::make('email')->email()->required()->unique(ignoreRecord: true)->prefixIcon('heroicon-m-envelope'),
-                TextInput::make('timezone')->required()->default('Asia/Karachi')->prefixIcon('heroicon-m-globe-asia-australia'),
+                TextInput::make('timezone')->required()->rule('timezone:all')->default('Asia/Karachi')->prefixIcon('heroicon-m-globe-asia-australia'),
             ]),
             Section::make('Security')->icon('heroicon-o-shield-check')->description('Reset the password or grant panel access.')->columns(2)->schema([
                 TextInput::make('new_password')->label('Set a new password')->password()->revealable()->minLength(8)
                     ->dehydrated(false)->helperText('Leave empty to keep the current password.'),
-                Toggle::make('is_admin')->label('Super admin')->helperText('Can sign in to this admin panel.')->inline(false),
+                Toggle::make('is_admin')->label('Super admin')->helperText('Can sign in to this admin panel.')->inline(false)
+                    ->disabled(fn (?User $record) => $record?->is(auth()->user())) // can't remove your own access,
             ]),
         ]);
     }

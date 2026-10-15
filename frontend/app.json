@@ -8,7 +8,6 @@
     "scheme": "handi",
     "userInterfaceStyle": "light",
     "ios": {
-      "icon": "./assets/images/icon.png",
       "bundleIdentifier": "com.hegemonic.handi"
     },
     "android": {

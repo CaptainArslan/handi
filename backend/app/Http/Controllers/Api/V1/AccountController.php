@@ -71,6 +71,11 @@ class AccountController extends Controller
                 throw ValidationException::withMessages(['current_password' => ['That password is incorrect.']]);
             }
 
+            $wait = $this->codes->resendWait(AuthCode::where('purpose', AuthCode::EMAIL_CHANGE)->where('user_id', $user->id)->whereNull('consumed_at')->latest('id')->first());
+            if ($wait > 0) {
+                return response()->json(['message' => "Wait {$wait}s before asking for another code.", 'retry_after' => $wait], 429);
+            }
+
             $this->codes->send(AuthCode::EMAIL_CHANGE, $data['email'], $user, $user->firstName());
             $pending = true;
             Activity::log($user, 'account.email_change_requested', 'Asked to change email', null, ['new_email' => $data['email']]);
@@ -194,7 +199,8 @@ class AccountController extends Controller
             throw ValidationException::withMessages(['password' => ['That password is incorrect.']]);
         }
 
-        Activity::log(null, 'account.deleted', "Deleted account {$user->email}", null, ['user_id' => $user->id, 'email' => $user->email, 'name' => $user->name]);
+        // Keep no personal data about a deleted account: a masked email and the old id are enough for support.
+        Activity::log(null, 'account.deleted', 'Deleted account '.$user->maskedEmail(), null, ['user_id' => $user->id]);
 
         $goodbye = new AccountDeletedMail(
             $user->email,
@@ -203,8 +209,7 @@ class AccountController extends Controller
             Media::query()->where('model_type', (new KitchenDish)->getMorphClass())->whereIn('model_id', $user->kitchenDishes()->select('id'))->count(),
         );
 
-        $user->tokens()->delete();
-        $user->delete();
+        $user->delete(); // also removes tokens and dish photos (User::booted)
 
         Mailer::notice($goodbye->email, $goodbye);
 

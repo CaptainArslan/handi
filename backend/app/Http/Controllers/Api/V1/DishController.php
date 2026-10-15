@@ -68,7 +68,7 @@ class DishController extends Controller
     public function store(Request $request, KitchenService $kitchens): JsonResponse
     {
         $data = $request->validate([
-            'library_dish_ids' => ['required', 'array', 'min:1'],
+            'library_dish_ids' => ['required', 'array', 'max:500', 'min:1'],
             'library_dish_ids.*' => ['integer', 'exists:dishes,id'],
         ]);
 

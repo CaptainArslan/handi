@@ -101,6 +101,9 @@ class DishImporter
             }
         });
 
+        // Flush once more after commit: a request between a row's flush and the commit could have re-cached old data.
+        \App\Support\CatalogCache::flush();
+
         return $result;
     }
 

@@ -72,7 +72,7 @@ class KitchenDish extends Model implements HasMedia
 
     public function scopeWithDetails(Builder $query): void
     {
-        $query->with(['dish.category', 'ownCategory']);
+        $query->with(['dish.category', 'dish.media', 'ownCategory', 'media']);
     }
 
     public function effectiveName(): string

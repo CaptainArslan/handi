@@ -30,7 +30,7 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->id('admin')
-            ->path('admin')
+            ->path(config('handi.admin_path', 'admin'))
             ->login()
             ->profile(\App\Filament\Pages\Auth\EditProfile::class, isSimple: false)
             ->brandName('Handi Admin')
@@ -45,6 +45,8 @@ class AdminPanelProvider extends PanelProvider
             ->spa()
             ->unsavedChangesAlerts()
             // Brand theme (plain CSS, no build step) + bundled Poppins font.
+            // The admin is never linked from the website and should never appear in search results.
+            ->renderHook(PanelsRenderHook::HEAD_START, fn () => '<meta name="robots" content="noindex, nofollow">')
             ->renderHook(PanelsRenderHook::HEAD_END, fn () => Blade::render(<<<'HTML'
                 <link rel="stylesheet" href="{{ asset('css/handi-admin.css') }}?v=10">
                 <script>
@@ -93,7 +95,9 @@ class AdminPanelProvider extends PanelProvider
                     ->icon('heroicon-o-bug-ant')
                     ->group('Developer')
                     ->sort(1)
-                    ->visible(fn (): bool => (bool) config('telescope.enabled') && class_exists(\Laravel\Telescope\Telescope::class)),
+                    ->visible(fn (): bool => (bool) config('telescope.enabled')
+                        && class_exists(\Laravel\Telescope\Telescope::class)
+                        && \App\Providers\TelescopeServiceProvider::allowed(auth()->user())),
                 NavigationItem::make('API docs')
                     ->url(fn (): string => url('docs/api'), shouldOpenInNewTab: true)
                     ->icon('heroicon-o-code-bracket')
