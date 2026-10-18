@@ -22,3 +22,6 @@ desktop.ini
 
 # Tester email lists (personal data, never committed)
 /testers/
+
+# Google Play service account (secret)
+frontend/google-play-service-account.json

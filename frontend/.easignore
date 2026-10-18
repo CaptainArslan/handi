@@ -22,3 +22,6 @@ Thumbs.db
 # google-services.json IS uploaded: the Android build needs it for push (it holds no secret).
 # Firebase service-account key (secret) — never uploaded; it goes into EAS credentials instead
 *firebase-adminsdk*.json
+
+# Google Play service account: used by `eas submit` on this PC only, never uploaded
+google-play-service-account.json

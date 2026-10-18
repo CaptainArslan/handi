@@ -51,3 +51,6 @@ example
 # Firebase config for push (kept out of git; EAS uploads it via .easignore)
 google-services.json
 *firebase-adminsdk*.json
+
+# Google Play service account for `eas submit` (secret, never committed)
+google-play-service-account.json
