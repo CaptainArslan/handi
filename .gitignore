@@ -19,3 +19,6 @@ desktop.ini
 # Marketing videos, reels and ad assets (large media, kept out of the repo)
 /marketing/
 /reels/
+
+# Tester email lists (personal data, never committed)
+/testers/
