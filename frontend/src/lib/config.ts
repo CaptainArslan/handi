@@ -40,4 +40,4 @@ export function mediaUrl(url: string | null | undefined): string | null {
 }
 
 export const APP_VERSION = '1.0.0';
-export const SUPPORT_EMAIL = 'support@handi.app';
+export const SUPPORT_EMAIL = 'support@handi.hegemonicinc.com';

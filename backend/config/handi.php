@@ -58,7 +58,7 @@ return [
     // Admin panel URL path (https://your-domain/{admin_path}). Not linked from the website.
     'admin_path' => env('ADMIN_PATH', 'admin'),
 
-    'support_email' => env('HANDI_SUPPORT_EMAIL', 'support@handi.app'),
+    'support_email' => env('HANDI_SUPPORT_EMAIL', 'support@handi.hegemonicinc.com'),
 
     // Store pages shown on the website. Leave empty until the app is live ("Coming soon" is shown instead).
     'store_links' => [

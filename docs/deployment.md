@@ -116,7 +116,7 @@ MAIL_FROM_ADDRESS=no-reply@hegemonicinc.com
 # Website, admin and Telescope
 ADMIN_PATH=admin                       # admin panel URL (/admin); not linked from the website
 TELESCOPE_ALLOWED_EMAILS=admin@handi.test   # only these signed-in admins may open /telescope
-HANDI_SUPPORT_EMAIL=support@handi.app  # shown on the website, support page and emails
+HANDI_SUPPORT_EMAIL=support@handi.hegemonicinc.com  # shown on the website, support page and emails
 HANDI_ANDROID_URL=                     # Play Store link once the app is live ("Coming soon" until then)
 HANDI_IOS_URL=                         # App Store link once the app is live
 ```

@@ -346,7 +346,7 @@ GET /api/v1/legal/terms
       "… 3 more"
     ],
     "updated_at": "2026-10-01",
-    "support_email": "support@handi.app"
+    "support_email": "support@handi.hegemonicinc.com"
   }
 }
 ```
