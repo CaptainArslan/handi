@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 
-import { TextLink } from '@/components/AuthKit';
+import { HelpLink, TextLink } from '@/components/AuthKit';
 import { ART } from '@/components/DishImage';
 import { useBottom, useTop } from '@/components/Layout';
 import { Button } from '@/components/ui/Button';
@@ -75,6 +75,7 @@ export default function Welcome() {
         <Txt v="bodyS" color={C.muted} align="center">
           Takes about 2 minutes · <TextLink onPress={() => router.push('/login')}>I have an account</TextLink>
         </Txt>
+        <HelpLink />
       </View>
     </View>
   );

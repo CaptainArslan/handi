@@ -206,5 +206,27 @@ export function useCountdown(initial = 0) {
 
 const styles = StyleSheet.create({
   alert: { flexDirection: 'row', gap: 10, alignItems: 'flex-start', paddingVertical: 12, paddingHorizontal: 14, borderRadius: 14 },
+  help: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 36, alignSelf: 'center' },
   busy: { height: 56, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, alignSelf: 'stretch' },
 });
+
+/** "Need help? Contact us" — shown on every sign-in screen so anyone stuck can reach the team. */
+export function HelpLink({ style }: { style?: StyleProp<ViewStyle> }) {
+  return (
+    <Pressable
+      onPress={() => router.push('/contact')}
+      accessibilityRole="link"
+      accessibilityLabel="Need help? Contact us"
+      hitSlop={6}
+      style={({ pressed }) => [styles.help, { opacity: pressed ? 0.7 : 1 }, style]}>
+      <Icon name="help" size={16} color={C.muted} strokeWidth={2} />
+      <Txt v="bodyS" color={C.muted}>
+        Need help?{' '}
+        <Txt v="bodyS" weight={600} color={C.primary} style={{ textDecorationLine: 'underline' }}>
+          Contact us
+        </Txt>
+      </Txt>
+    </Pressable>
+  );
+}
+

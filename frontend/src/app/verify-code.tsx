@@ -6,8 +6,8 @@ import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withSequence, w
 
 import { body, errorMessage, status } from '@/api/client';
 import { endpoints } from '@/api/endpoints';
-import { goBack, IconTile, useCountdown } from '@/components/AuthKit';
-import { FormScroll, Heading } from '@/components/Layout';
+import { goBack, HelpLink, IconTile, useCountdown } from '@/components/AuthKit';
+import { FormScroll, Heading, Spacer } from '@/components/Layout';
 import { BackButton, Button } from '@/components/ui/Button';
 import { DISPLAY, Txt } from '@/components/ui/Txt';
 import { pad } from '@/lib/dates';
@@ -181,6 +181,9 @@ function VerifyCode() {
           </Pressable>
         )}
       </View>
+
+      <Spacer />
+      <HelpLink />
     </FormScroll>
   );
 }

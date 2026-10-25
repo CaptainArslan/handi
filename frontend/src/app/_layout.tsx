@@ -28,7 +28,7 @@ try {
 }
 
 /** Routes anyone can open. Everything else needs a session. */
-const PUBLIC = new Set(['', 'index', 'welcome', 'setup', 'signup', 'login', 'forgot-password', 'verify-code', 'reset-password', 'no-connection', 'legal', '+not-found']);
+const PUBLIC = new Set(['', 'index', 'welcome', 'setup', 'signup', 'login', 'forgot-password', 'verify-code', 'reset-password', 'no-connection', 'legal', 'contact', '+not-found']);
 /** Signed-in users are sent past these to Today. */
 const GUEST_ONLY = new Set(['welcome', 'setup', 'signup', 'login', 'forgot-password', 'verify-code', 'reset-password', 'no-connection']);
 

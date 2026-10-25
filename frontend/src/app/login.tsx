@@ -7,7 +7,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } 
 import { body, errorMessage, fieldErrors, status } from '@/api/client';
 import { endpoints } from '@/api/endpoints';
 
-import { goBack, InlineAlert, LinkButton, TextLink, useCountdown } from '@/components/AuthKit';
+import { goBack, HelpLink, InlineAlert, LinkButton, TextLink, useCountdown } from '@/components/AuthKit';
 import { FormScroll, Heading, Spacer } from '@/components/Layout';
 import { BackButton, Button } from '@/components/ui/Button';
 import { Field, Input } from '@/components/ui/Field';
@@ -176,6 +176,7 @@ export default function Login() {
       <Txt v="body" color={C.muted} align="center">
         New here? <TextLink weight={700} onPress={() => router.dismissTo('/welcome')}>Set up your kitchen</TextLink>
       </Txt>
+      <HelpLink style={{ marginTop: -14 }} />
     </FormScroll>
   );
 }

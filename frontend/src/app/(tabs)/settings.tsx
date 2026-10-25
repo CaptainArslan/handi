@@ -174,6 +174,7 @@ function SettingsBody({ me, dataUpdatedAt, refetch }: { me: Me; dataUpdatedAt: n
 
       <Group title="Account">
         <Row label="Change password" onPress={go('/account/password')} />
+        <Row label="Help & contact us" onPress={go('/contact')} />
         <Row
           label="Terms & privacy"
           onPress={() => {

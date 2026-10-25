@@ -1,6 +1,6 @@
 # Handi app
 
-The app is built with Expo SDK 57, React Native 0.86, Expo Router (typed routes) and TypeScript. It runs on Android, iOS and web, and talks to the Laravel API in [`../backend`](../backend). The API contract is in [`../docs/api.md`](../docs/api.md), and the screen-by-screen API map is in [`../docs/screens.md`](../docs/screens.md).
+The app is built with Expo SDK 57, React Native 0.86, Expo Router (typed routes) and TypeScript. It runs on Android, iOS and web, and talks to the Laravel API in [`../backend`](../backend). The API contract is in [`../docs/api.md`](../docs/api.md).
 
 ## Requirements
 
@@ -156,6 +156,7 @@ npm run lint
 | Dishes and meals | `dish/[id]` · `add-dish` (library or your own, with photo) · `log-meal` |
 | Account | `account/profile` · `account/verify-email` · `account/password` · `account/family` · `account/preferences` · `account/location` · `account/delete-account` |
 | Notifications | `notifications` (inbox) · `notification-settings` · `allow-reminder` |
+| Help | `contact` (Contact us form, linked from every sign-in screen and Settings; works signed in or out) |
 
 ## Structure
 

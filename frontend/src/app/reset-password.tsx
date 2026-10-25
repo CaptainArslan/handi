@@ -5,8 +5,8 @@ import { StyleSheet, View, type TextInput } from 'react-native';
 
 import { errorMessage, fieldErrors, status } from '@/api/client';
 import { endpoints } from '@/api/endpoints';
-import { goBack, InlineAlert } from '@/components/AuthKit';
-import { FormScroll, Heading } from '@/components/Layout';
+import { goBack, HelpLink, InlineAlert } from '@/components/AuthKit';
+import { FormScroll, Heading, Spacer } from '@/components/Layout';
 import { BackButton, Button } from '@/components/ui/Button';
 import { RuleRow } from '@/components/ui/Controls';
 import { Field, Input } from '@/components/ui/Field';
@@ -130,6 +130,9 @@ function ResetPassword() {
 
         <Button label="Update password" weight={600} loading={reset.isPending} onPress={submit} />
       </View>
+
+      <Spacer />
+      <HelpLink />
     </FormScroll>
   );
 }

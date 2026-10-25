@@ -50,6 +50,19 @@ export interface RegisterInput {
   custom_dishes: { name: string; category: string | null }[];
 }
 
+export type ContactTopic = 'question' | 'problem' | 'account' | 'feedback' | 'other';
+
+export interface ContactInput {
+  name: string;
+  email: string;
+  topic: ContactTopic;
+  message: string;
+  device?: string;
+  app_version?: string;
+  /** Optional file from the document picker (up to 2 MB). */
+  attachment?: { uri: string; name: string; type: string } | null;
+}
+
 export interface CustomDishInput {
   name?: string;
   category?: string;
@@ -108,6 +121,11 @@ export const endpoints = {
   register: (body: RegisterInput) => d<Session>(api.post('/auth/register', body)),
   login: (body: { email: string; password: string; device_name: string }) => d<Session>(api.post('/auth/login', body)),
   logout: () => api.post('/auth/logout'),
+  /** Contact us (works signed in or out). Multipart only when a file is attached. */
+  contact: ({ attachment, ...fields }: ContactInput) =>
+    attachment
+      ? uploadFile<{ message: string }>('/contact', attachment, { ...fields }, 'attachment')
+      : api.post<{ message: string }>('/contact', fields).then((r) => r.data),
   forgot: (email: string) => d<{ masked_email: string; expires_in: number; resend_in: number }>(api.post('/auth/password/forgot', { email })),
   resend: (email: string) => d<{ masked_email: string; expires_in: number; resend_in: number }>(api.post('/auth/password/resend', { email })),
   verifyCode: (email: string, code: string) => d<{ reset_token: string }>(api.post('/auth/password/verify', { email, code })),

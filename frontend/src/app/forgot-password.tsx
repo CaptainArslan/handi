@@ -5,7 +5,7 @@ import { View } from 'react-native';
 
 import { errorMessage, fieldErrors, status } from '@/api/client';
 import { endpoints } from '@/api/endpoints';
-import { goBack, IconTile, InlineAlert } from '@/components/AuthKit';
+import { goBack, HelpLink, IconTile, InlineAlert } from '@/components/AuthKit';
 import { FormScroll, Heading, Spacer } from '@/components/Layout';
 import { BackButton, Button } from '@/components/ui/Button';
 import { Field, Input } from '@/components/ui/Field';
@@ -80,6 +80,7 @@ export default function ForgotPassword() {
       <Txt v="bodyS" lh={21} color={C.muted} align="center">
         For your privacy we don’t confirm whether an email is registered. Check spam if nothing arrives.
       </Txt>
+      <HelpLink style={{ marginTop: -14 }} />
     </FormScroll>
   );
 }

@@ -279,7 +279,8 @@ export default function Signup() {
           <WaitingButton label="Waiting for internet…" />
         )}
         <Txt v="bodyS" color={C.muted} align="center">
-          Have an account? <TextLink onPress={() => router.push('/login')}>Log in</TextLink>
+          Have an account? <TextLink onPress={() => router.push('/login')}>Log in</TextLink> ·{' '}
+          <TextLink onPress={() => router.push('/contact')}>Need help?</TextLink>
         </Txt>
       </View>
 
