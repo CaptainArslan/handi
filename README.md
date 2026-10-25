@@ -571,6 +571,7 @@ Restart with `npx expo start -c` after changing `.env`. Sign in with the demo us
 | Send today's reminders now (testing) | `php artisan reminders:dispatch --force` |
 | Add another super admin | `php artisan handi:create-admin someone@example.com --name="Someone"` |
 | Move old photos into the media library | `php artisan handi:photos-to-media` |
+| Check photo storage (S3 / R2: keys, public URL, CORS) | `php artisan handi:check-storage` |
 | Run all tests | `php artisan test` |
 | Run one test file | `php artisan test tests/Feature/ContactTest.php` |
 | Format the code (Laravel Pint) | `vendor/bin/pint` |

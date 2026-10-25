@@ -179,14 +179,40 @@ sudo cp /var/www/handi/backend/deploy/handi-worker.conf /etc/supervisor/conf.d/
 sudo supervisorctl reread && sudo supervisorctl update && sudo supervisorctl status
 ```
 
-## 9. Photos on Cloudflare R2 (optional)
+## 9. Photos on Cloudflare R2 or Amazon S3 (optional)
 
-By default photos stay on the server (`MEDIA_DISK=public`, served from `/storage/...`). To move them to R2:
+By default photos stay on the server (`MEDIA_DISK=public`, served from `/storage/...`). Dish photos use **`MEDIA_DISK`**, not `FILESYSTEM_DISK`.
 
-1. Create bucket `handi-media` and give it a public custom domain, e.g. `media.hegemonicinc.com`.
-2. Create an R2 API token with Object Read & Write on that bucket.
-3. In `.env`: `MEDIA_DISK=s3` and the `AWS_*` values (template in `.env.production.example`), then `php artisan config:clear`.
-4. Existing photos: re-upload, or copy `storage/app/public` into the bucket.
+**Cloudflare R2**
+
+1. Create bucket `handi-media`. Under *Settings → Public access* connect a custom domain (e.g. `media.hegemonicinc.com`) or turn on the r2.dev address (testing only).
+2. Under *Settings → CORS policy* allow the admin to preview photos:
+   ```json
+   [{ "AllowedOrigins": ["https://handi.hegemonicinc.com"], "AllowedMethods": ["GET", "HEAD"], "AllowedHeaders": ["*"], "MaxAgeSeconds": 3600 }]
+   ```
+3. *Manage R2 API Tokens → Create API token* with **Object Read & Write** on that bucket.
+4. `.env`:
+   ```dotenv
+   MEDIA_DISK=s3
+   AWS_ACCESS_KEY_ID=…
+   AWS_SECRET_ACCESS_KEY=…
+   AWS_DEFAULT_REGION=auto
+   AWS_BUCKET=handi-media
+   AWS_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com     # no bucket name at the end
+   AWS_URL=https://media.hegemonicinc.com                          # the public address from step 1
+   AWS_USE_PATH_STYLE_ENDPOINT=false
+   ```
+
+**Amazon S3:** same keys, but `AWS_DEFAULT_REGION` is the bucket's region (e.g. `ap-south-1`), `AWS_ENDPOINT` is **empty**, and the bucket needs "Block public access" off plus a public-read bucket policy for `s3:GetObject`, and the same CORS rule (*Permissions → CORS*).
+
+Then:
+
+```bash
+php artisan config:clear && php artisan optimize
+php artisan handi:check-storage
+```
+
+`handi:check-storage` uploads a test file, opens its public URL and checks CORS, and tells you exactly what is wrong (wrong key or secret, missing bucket, wrong region, bucket not public, no CORS, `FILESYSTEM_DISK` set instead of `MEDIA_DISK`, cached config). Photos uploaded before the switch stay on the server and keep working; only new uploads go to the bucket.
 
 ## 10. Every later deploy
 
