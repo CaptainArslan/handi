@@ -22,6 +22,8 @@ Route::middleware(SiteHeaders::class)
         Route::get('/privacy', [SiteController::class, 'legal'])->defaults('document', 'privacy')->name('privacy');
         Route::get('/terms', [SiteController::class, 'legal'])->defaults('document', 'terms')->name('terms');
         Route::get('/support', [SiteController::class, 'support'])->name('support');
+        Route::get('/contact', [SiteController::class, 'contact'])->name('contact');
+        Route::post('/contact', [SiteController::class, 'sendContact'])->middleware('throttle:contact')->name('contact.send');
         Route::get('/delete-account', [SiteController::class, 'deleteAccount'])->name('delete-account');
         Route::get('/sitemap.xml', [SiteController::class, 'sitemap'])->name('sitemap');
     });

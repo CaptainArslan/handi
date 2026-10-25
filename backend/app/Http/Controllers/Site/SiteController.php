@@ -3,12 +3,17 @@
 namespace App\Http\Controllers\Site;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\SiteContactRequest;
 use App\Models\Category;
 use App\Models\Dish;
+use App\Services\ContactService;
 use App\Support\CatalogCache;
 use App\Support\Media;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\ViewErrorBag;
 use Illuminate\View\View;
 
 /**
@@ -57,6 +62,20 @@ class SiteController extends Controller
         return view('site.support');
     }
 
+    /** Contact form. `?sent=1` shows the thank-you message after a successful send. */
+    public function contact(Request $request): View
+    {
+        return view('site.contact', ['errors' => new ViewErrorBag, 'old' => [], 'sent' => $request->boolean('sent')]);
+    }
+
+    /** No session on the site: errors re-render the form (SiteContactRequest), success redirects (no double send on refresh). */
+    public function sendContact(SiteContactRequest $request, ContactService $contacts): RedirectResponse
+    {
+        $contacts->submit([...$request->validated(), 'device' => 'Website'], $request->file('attachment'), null, $request);
+
+        return redirect()->to(route('site.contact', ['sent' => 1]).'#form', 303);
+    }
+
     public function deleteAccount(): View
     {
         return view('site.delete-account');
@@ -64,7 +83,7 @@ class SiteController extends Controller
 
     public function sitemap(): Response
     {
-        $urls = [route('site.home'), route('site.privacy'), route('site.terms'), route('site.support'), route('site.delete-account')];
+        $urls = [route('site.home'), route('site.privacy'), route('site.terms'), route('site.support'), route('site.contact'), route('site.delete-account')];
 
         return response()
             ->view('site.sitemap', ['urls' => $urls, 'updated' => config('legal.updated_at')])

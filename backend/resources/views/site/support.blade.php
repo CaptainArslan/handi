@@ -8,7 +8,7 @@
     <article class="wrap doc">
         <span class="eyebrow">Support</span>
         <h1>How can we help?</h1>
-        <p class="summary">Email <a href="mailto:{{ $support }}?subject=Handi%20help">{{ $support }}</a> and a person replies, usually within one working day. Please send it from the address you signed up with and tell us your phone model or browser.</p>
+        <p class="summary"><a href="{{ route('site.contact') }}">Send us a message</a> (you can attach a screenshot) or email <a href="mailto:{{ $support }}?subject=Handi%20help">{{ $support }}</a>, and a person replies, usually within one working day. Please send it from the address you signed up with and tell us your phone model or browser.</p>
 
         <section>
             <h2>Signing in</h2>

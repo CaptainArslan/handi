@@ -60,6 +60,23 @@ return [
 
     'support_email' => env('HANDI_SUPPORT_EMAIL', 'support@handi.hegemonicinc.com'),
 
+    // "Contact us" form (app + web). Messages are emailed here (reply goes straight to the sender)
+    // and also kept in the admin panel, so nothing is lost if the mail server is down.
+    'contact' => [
+        'to' => env('HANDI_CONTACT_EMAIL', env('HANDI_SUPPORT_EMAIL', 'support@handi.hegemonicinc.com')),
+        // Where people's answers to our replies go (the Reply-To on emails sent from the admin panel).
+        'reply_to' => env('HANDI_CONTACT_REPLY_TO', env('HANDI_SUPPORT_EMAIL', 'support@handi.hegemonicinc.com')),
+        'attachment_max_kb' => 2048,
+        'attachment_mimes' => ['jpg', 'jpeg', 'png', 'webp', 'heic', 'gif', 'pdf', 'txt', 'doc', 'docx'],
+        'topics' => [
+            'question' => 'Question',
+            'problem' => 'Something isn’t working',
+            'account' => 'My account',
+            'feedback' => 'Feedback or idea',
+            'other' => 'Something else',
+        ],
+    ],
+
     // Store pages shown on the website. Leave empty until the app is live ("Coming soon" is shown instead).
     'store_links' => [
         'android' => env('HANDI_ANDROID_URL'),

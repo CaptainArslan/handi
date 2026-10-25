@@ -3,29 +3,30 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Account\ChangePasswordRequest;
+use App\Http\Requests\Account\DeleteAccountRequest;
+use App\Http\Requests\Account\UpdateProfileRequest;
+use App\Http\Requests\Account\VerifyEmailRequest;
 use App\Http\Resources\UserResource;
-use App\Models\AuthCode;
-use App\Models\User;
-use App\Services\AuthCodeService;
 use App\Mail\AccountDeletedMail;
 use App\Mail\EmailChangedMail;
 use App\Mail\PasswordChangedMail;
+use App\Models\AuthCode;
 use App\Models\KitchenDish;
+use App\Models\User;
+use App\Services\AuthCodeService;
 use App\Support\Activity;
 use App\Support\Mailer;
-use Spatie\MediaLibrary\MediaCollections\Models\Media;
-use App\Support\Rules;
+use App\Support\Tokens;
 use Dedoc\Scramble\Attributes\BodyParameter;
 use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-/**
- */
 #[Group('Account', weight: 3)]
 class AccountController extends Controller
 {
@@ -47,19 +48,11 @@ class AccountController extends Controller
      * Changing the email needs `current_password`; a 6-digit code is emailed to the new
      * address and the change applies after `POST /me/email/verify`.
      */
-    public function update(Request $request): JsonResponse
+    public function update(UpdateProfileRequest $request): JsonResponse
     {
         /** @var User $user */
         $user = $request->user();
-        if ($request->has('email') && is_string($request->input('email'))) {
-            $request->merge(['email' => strtolower(trim($request->input('email')))]);
-        }
-
-        $data = $request->validate([
-            'name' => ['sometimes', ...Rules::name()],
-            'email' => ['sometimes', 'required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
-            'current_password' => ['nullable', 'string'],
-        ], [...Rules::nameMessages(), ...Rules::emailMessages()]);
+        $data = $request->validated();
 
         $pending = false;
 
@@ -97,11 +90,11 @@ class AccountController extends Controller
      *
      * The 6-digit code sent to the new address.
      */
-    public function verifyEmail(Request $request): UserResource|JsonResponse
+    public function verifyEmail(VerifyEmailRequest $request): UserResource|JsonResponse
     {
         /** @var User $user */
         $user = $request->user();
-        $data = $request->validate(['code' => ['required', 'digits:6']], ['code.required' => 'Enter the 6-digit code.', 'code.digits' => 'Enter the 6-digit code.']);
+        $data = $request->validated();
 
         $code = AuthCode::where('purpose', AuthCode::EMAIL_CHANGE)->where('user_id', $user->id)->whereNull('consumed_at')->latest('id')->first();
 
@@ -135,25 +128,11 @@ class AccountController extends Controller
     /**
      * Change password
      */
-    public function password(Request $request): Response
+    public function password(ChangePasswordRequest $request): Response
     {
         /** @var User $user */
         $user = $request->user();
-
-        $data = $request->validate([
-            'current_password' => ['required', 'string'],
-            'password' => [...Rules::password(), 'confirmed', 'different:current_password'],
-            'password_confirmation' => ['required'],
-            'sign_out_other_devices' => ['sometimes', 'boolean'],
-        ], [
-            'current_password.required' => 'Enter your current password.',
-            'password.required' => 'Meet all the rules below.',
-            'password.min' => 'Meet all the rules below.',
-            'password.regex' => 'Meet all the rules below.',
-            'password.different' => 'Meet all the rules below.',
-            'password.confirmed' => 'Passwords don’t match.',
-            'password_confirmation.required' => 'Confirm your new password.',
-        ]);
+        $data = $request->validated();
 
         if (! Hash::check($data['current_password'], $user->password)) {
             throw ValidationException::withMessages(['current_password' => ['Current password is incorrect.']]);
@@ -163,7 +142,7 @@ class AccountController extends Controller
 
         $signOut = $request->boolean('sign_out_other_devices', true);
         if ($signOut) {
-            $current = \App\Support\Tokens::currentId($user);
+            $current = Tokens::currentId($user);
             $user->tokens()->where('id', '!=', $current)->delete();
             $user->devices()->where(fn ($q) => $q->whereNull('personal_access_token_id')->orWhere('personal_access_token_id', '!=', $current))->delete();
         }
@@ -181,19 +160,11 @@ class AccountController extends Controller
      */
     #[BodyParameter('password', 'Current password', required: true, type: 'string', example: 'kitchen123')]
     #[BodyParameter('confirmation', 'Must be exactly DELETE', required: true, type: 'string', example: 'DELETE')]
-    public function destroy(Request $request): Response
+    public function destroy(DeleteAccountRequest $request): Response
     {
         /** @var User $user */
         $user = $request->user();
-
-        $data = $request->validate([
-            'password' => ['required', 'string'],
-            'confirmation' => ['required', 'in:DELETE'],
-        ], [
-            'password.required' => 'Enter your password.',
-            'confirmation.required' => 'Type DELETE in capital letters.',
-            'confirmation.in' => 'It must say DELETE exactly.',
-        ]);
+        $data = $request->validated();
 
         if (! Hash::check($data['password'], $user->password)) {
             throw ValidationException::withMessages(['password' => ['That password is incorrect.']]);

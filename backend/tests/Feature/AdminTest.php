@@ -38,6 +38,7 @@ it('renders every admin page', function (string $url) {
     '/admin',
     '/admin/users',
     '/admin/activity-logs',
+    '/admin/contact-messages',
     '/admin/dishes',
     '/admin/dishes/create',
     '/admin/categories',

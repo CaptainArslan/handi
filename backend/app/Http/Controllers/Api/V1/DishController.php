@@ -5,6 +5,10 @@ namespace App\Http\Controllers\Api\V1;
 use App\Enums\NotificationType;
 use App\Enums\PhotoStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Dish\AddLibraryDishesRequest;
+use App\Http\Requests\Dish\DishPhotoRequest;
+use App\Http\Requests\Dish\ListDishesRequest;
+use App\Http\Requests\Dish\UpdateDishTagsRequest;
 use App\Http\Resources\KitchenDishResource;
 use App\Models\KitchenDish;
 use App\Models\User;
@@ -12,14 +16,12 @@ use App\Services\KitchenService;
 use App\Services\NotificationService;
 use App\Services\PickService;
 use App\Support\Activity;
-use App\Support\Rules;
 use App\Support\UserClock;
 use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 /**
  * "My dishes": the dishes in the user's kitchen, library and custom.
@@ -34,13 +36,9 @@ class DishController extends Controller
      *
      * Filter by `q` (name) and `category` key; `custom=1` for custom only.
      */
-    public function index(Request $request): JsonResponse
+    public function index(ListDishesRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'q' => ['nullable', 'string', 'max:40'],
-            'category' => ['nullable', 'string', 'max:40'],
-            'custom' => ['nullable', 'boolean'],
-        ]);
+        $data = $request->validated();
 
         /** @var User $user */
         $user = $request->user();
@@ -65,12 +63,9 @@ class DishController extends Controller
     /**
      * Add library dishes
      */
-    public function store(Request $request, KitchenService $kitchens): JsonResponse
+    public function store(AddLibraryDishesRequest $request, KitchenService $kitchens): JsonResponse
     {
-        $data = $request->validate([
-            'library_dish_ids' => ['required', 'array', 'max:500', 'min:1'],
-            'library_dish_ids.*' => ['integer', 'exists:dishes,id'],
-        ]);
+        $data = $request->validated();
 
         $added = $kitchens->addLibraryDishes($request->user(), $data['library_dish_ids']);
         Activity::log($request->user(), 'dish.added', "Added {$added} library dish(es)");
@@ -96,15 +91,10 @@ class DishController extends Controller
      *
      * For library dishes this stores your own tags; "Reset to library tags" undoes it.
      */
-    public function update(Request $request, int $id): JsonResponse
+    public function update(UpdateDishTagsRequest $request, int $id): JsonResponse
     {
         $dish = $this->find($request, $id);
-
-        $data = $request->validate([
-            ...Rules::weather(required: false),
-            'effort' => ['sometimes', 'in:quick,medium,heavy'],
-            'cost' => ['sometimes', 'in:low,medium,high'],
-        ], Rules::weatherMessages(message: 'Pick at least one weather, or “Any”.'));
+        $data = $request->validated();
 
         $dish->update($data);
         Activity::log($request->user(), 'dish.updated', 'Changed tags of '.$dish->effectiveName(), $dish, $data);
@@ -131,13 +121,9 @@ class DishController extends Controller
      *
      * Multipart field `photo`, image up to 10 MB. Adds a "Photo added" notification.
      */
-    public function photo(Request $request, int $id, NotificationService $notifications): JsonResponse
+    public function photo(DishPhotoRequest $request, int $id, NotificationService $notifications): JsonResponse
     {
         $dish = $this->find($request, $id);
-
-        $request->validate([
-            'photo' => ['required', 'image', 'max:'.config('handi.photo_max_kb', 10240)],
-        ], ['photo.max' => 'Photos can be up to 10 MB.', 'photo.uploaded' => 'That photo is too large to upload. Try a smaller one.', 'photo.image' => 'Choose a photo (JPG, PNG or WebP).']);
 
         // Media library: replaces any earlier photo and makes the thumb/card sizes.
         $dish->attachPhoto($request->file('photo'));

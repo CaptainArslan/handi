@@ -50,6 +50,7 @@
                 <li><a href="{{ route('site.home') }}#setup">Set up</a></li>
                 <li><a href="{{ route('site.home') }}#dishes">Dishes</a></li>
                 <li><a href="{{ route('site.home') }}#faq">FAQ</a></li>
+                <li><a href="{{ route('site.contact') }}" @if (request()->routeIs('site.contact')) aria-current="page" @endif>Contact</a></li>
             </ul>
             <a class="nav-login" href="{{ url('/app/login') }}">Log in</a>
             <a class="btn btn-primary" href="{{ url('/app/welcome') }}">Get started</a>
@@ -63,6 +64,7 @@
                     <a href="{{ route('site.home') }}#dishes">Dishes</a>
                     <a href="{{ route('site.home') }}#faq">FAQ</a>
                     <a href="{{ route('site.home') }}#download">Get the app</a>
+                    <a href="{{ route('site.contact') }}">Contact us</a>
                     <a href="{{ url('/app/login') }}">Log in</a>
                     <a class="menu-cta" href="{{ url('/app/welcome') }}">Get started — it’s free</a>
                 </div>
@@ -99,6 +101,7 @@
                     <h3>Help</h3>
                     <ul>
                         <li><a href="{{ route('site.support') }}">Support</a></li>
+                        <li><a href="{{ route('site.contact') }}">Contact us</a></li>
                         <li><a href="{{ route('site.privacy') }}">Privacy policy</a></li>
                         <li><a href="{{ route('site.terms') }}">Terms of use</a></li>
                         <li><a href="{{ route('site.delete-account') }}">Delete your account</a></li>

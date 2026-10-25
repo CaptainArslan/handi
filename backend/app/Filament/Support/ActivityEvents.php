@@ -18,6 +18,7 @@ class ActivityEvents
         'account.email_changed' => ['Email changed', 'warning', 'heroicon-m-envelope'],
         'account.password_changed' => ['Password changed', 'warning', 'heroicon-m-lock-closed'],
         'account.deleted' => ['Account deleted', 'danger', 'heroicon-m-trash'],
+        'contact.sent' => ['Contacted us', 'info', 'heroicon-m-chat-bubble-left-ellipsis'],
         'kitchen.updated' => ['Kitchen settings', 'gray', 'heroicon-m-adjustments-horizontal'],
         'kitchen.location_changed' => ['Location changed', 'gray', 'heroicon-m-map-pin'],
         'notifications.settings_updated' => ['Reminder settings', 'gray', 'heroicon-m-bell'],
@@ -39,6 +40,8 @@ class ActivityEvents
         'admin.sessions_revoked' => ['Admin logged user out', 'warning', 'heroicon-m-shield-check'],
         'admin.user_deleted' => ['Admin deleted user', 'danger', 'heroicon-m-shield-exclamation'],
         'admin.dishes_imported' => ['Dishes imported', 'warning', 'heroicon-m-arrow-up-tray'],
+        'admin.contact_status' => ['Contact message status', 'gray', 'heroicon-m-chat-bubble-left-ellipsis'],
+        'admin.contact_replied' => ['Replied to contact message', 'success', 'heroicon-m-paper-airplane'],
     ];
 
     public static function label(?string $event): string

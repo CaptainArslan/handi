@@ -51,6 +51,10 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('auth', fn (Request $request) => Limit::perMinute(20)->by('auth:'.$request->ip()));
 
+        // Contact us: a flood guard on every attempt (typos and too-big files included). The real
+        // "5 sent messages an hour" limit is counted only on successful sends, in ContactService.
+        RateLimiter::for('contact', fn (Request $request) => Limit::perHour(30)->by('contact:'.($request->user('sanctum')?->getKey() ?? $request->ip())));
+
         // Sensitive signed-in actions that send email codes or pushes: a few per hour per user.
         RateLimiter::for('sensitive', fn (Request $request) => Limit::perHour(10)->by('sensitive:'.($request->user('sanctum')?->getKey() ?? $request->ip())));
 

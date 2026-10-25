@@ -1,0 +1,11 @@
+@extends('mail.handi.layout')
+@section('preheader', \Illuminate\Support\Str::limit($contact->message, 110))
+@section('eyebrow', 'New contact message')
+@section('eyebrowTone', 'warm')
+@section('heading', 'New message: '.$contact->topicLabel())
+@section('why', 'Sent to the Handi team from the “Contact us” form. Reply from the admin panel so the answer goes out from Handi and is saved with the message.')
+@section('content')
+    @include('mail.handi.parts.facts', ['rows' => $facts])
+    @include('mail.handi.parts.note', ['html' => nl2br(e($contact->message))])
+    @include('mail.handi.parts.button', ['url' => $adminUrl, 'label' => 'Reply as Handi team'])
+@endsection

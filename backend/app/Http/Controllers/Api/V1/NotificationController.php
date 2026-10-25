@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Notification\ListNotificationsRequest;
+use App\Http\Requests\Notification\MarkNotificationRequest;
 use App\Http\Resources\NotificationResource;
 use App\Models\AppNotification;
 use Dedoc\Scramble\Attributes\Group;
@@ -21,9 +23,9 @@ class NotificationController extends Controller
      *
      * Newest first. `filter` = all | unread.
      */
-    public function index(Request $request): JsonResponse
+    public function index(ListNotificationsRequest $request): JsonResponse
     {
-        $data = $request->validate(['filter' => ['nullable', 'in:all,unread']]);
+        $data = $request->validated();
 
         $items = $request->user()->appNotifications()
             ->when(($data['filter'] ?? 'all') === 'unread', fn ($q) => $q->whereNull('read_at'))
@@ -40,9 +42,8 @@ class NotificationController extends Controller
     /**
      * Mark as read
      */
-    public function update(Request $request, int $id): NotificationResource
+    public function update(MarkNotificationRequest $request, int $id): NotificationResource
     {
-        $request->validate(['read' => ['required', 'boolean']]);
         $item = $this->find($request, $id);
         $item->update(['read_at' => $request->boolean('read') ? ($item->read_at ?? now()) : null]);
 

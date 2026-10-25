@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api\V1;
 use App\Enums\NotificationType;
 use App\Enums\PhotoStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Dish\StoreCustomDishRequest;
+use App\Http\Requests\Dish\UpdateCustomDishRequest;
 use App\Http\Resources\KitchenDishResource;
 use App\Models\Category;
 use App\Models\KitchenDish;
@@ -12,15 +14,12 @@ use App\Services\KitchenService;
 use App\Services\NotificationService;
 use App\Services\PickService;
 use App\Support\Activity;
-use App\Support\Rules;
 use App\Support\UserClock;
 use Dedoc\Scramble\Attributes\BodyParameter;
 use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 
 /**
  * Family recipes that aren't in the library.
@@ -60,9 +59,9 @@ class CustomDishController extends Controller
     #[BodyParameter('effort', 'quick | medium | heavy (default medium)', type: 'string', example: 'heavy')]
     #[BodyParameter('cost', 'low | medium | high (default low)', type: 'string', example: 'medium')]
     #[BodyParameter('photo', 'Optional image up to 10 MB (send as multipart/form-data)', type: 'string', format: 'binary')]
-    public function store(Request $request, NotificationService $notifications): JsonResponse
+    public function store(StoreCustomDishRequest $request, NotificationService $notifications): JsonResponse
     {
-        $data = $this->validated($request);
+        $data = $request->validated();
 
         $dish = $this->kitchens->createCustomDish($request->user(), $data);
 
@@ -87,10 +86,10 @@ class CustomDishController extends Controller
     #[BodyParameter('usual_meal', 'breakfast | lunch | dinner | both (default both)', type: 'string', example: 'both')]
     #[BodyParameter('effort', 'quick | medium | heavy (default medium)', type: 'string', example: 'heavy')]
     #[BodyParameter('cost', 'low | medium | high (default low)', type: 'string', example: 'medium')]
-    public function update(Request $request, int $id): JsonResponse
+    public function update(UpdateCustomDishRequest $request, int $id): JsonResponse
     {
         $dish = $this->find($request, $id);
-        $data = $this->validated($request, $dish);
+        $data = $request->validated();
 
         $category = isset($data['category']) ? Category::where('key', $data['category'])->first() : null;
 
@@ -131,45 +130,6 @@ class CustomDishController extends Controller
         $dish->update(['removed_at' => null]);
 
         return $this->respond($request, $dish->fresh());
-    }
-
-    private function validated(Request $request, ?KitchenDish $ignore = null): array
-    {
-        if (is_string($request->input('weather'))) {
-            $request->merge(['weather' => json_decode($request->input('weather'), true) ?? explode(',', $request->input('weather'))]);
-        }
-
-        $req = $ignore ? 'sometimes' : 'required';
-
-        $data = $request->validate([
-            'name' => [$req, 'string', 'min:2', 'max:40', 'regex:'.Rules::DISH_NAME_REGEX],
-            'category' => [$req, 'string', 'exists:categories,key'],
-            ...Rules::weather(required: ! $ignore),
-            'usual_meal' => ['sometimes', 'in:breakfast,lunch,dinner,both'],
-            'effort' => ['sometimes', 'in:quick,medium,heavy'],
-            'cost' => ['sometimes', 'in:low,medium,high'],
-            'photo' => ['nullable', 'image', 'max:'.config('handi.photo_max_kb', 10240)],
-        ], [
-            'name.required' => 'Give your dish a name.',
-            'name.min' => 'Name is too short.',
-            'name.max' => 'Keep it under 40 characters.',
-            'name.regex' => 'Use letters, spaces and ( ) - only.',
-            'category.required' => 'Choose a category.',
-            'category.exists' => 'Choose a category.',
-            ...Rules::weatherMessages(),
-            'photo.max' => 'Photos can be up to 10 MB.', 'photo.uploaded' => 'That photo is too large to upload. Try a smaller one.',
-        ]);
-
-        if (! isset($data['name'])) {
-            return $data;
-        }
-
-        $name = KitchenService::cleanName($data['name']);
-        if ($this->kitchens->nameTaken($request->user(), $name, $ignore?->id)) {
-            throw ValidationException::withMessages(['name' => ["“{$name}” is already in your dishes."]]);
-        }
-
-        return $data;
     }
 
     private function find(Request $request, int $id, bool $includeRemoved = false): KitchenDish

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Enums\LogSource;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Today\PlanTodayRequest;
 use App\Http\Resources\KitchenDishResource;
 use App\Http\Resources\MealLogResource;
 use App\Models\DailyPick;
@@ -17,7 +18,6 @@ use App\Support\UserClock;
 use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use RuntimeException;
 
 /**
@@ -63,14 +63,10 @@ class TodayController extends Controller
      *
      * Plans one of today's picks for lunch or dinner. Nothing is logged yet.
      */
-    public function plan(Request $request): JsonResponse
+    public function plan(PlanTodayRequest $request): JsonResponse
     {
         $pick = $this->picks->today($request->user());
-
-        $data = $request->validate([
-            'kitchen_dish_id' => ['required', 'integer', Rule::in($pick->dishIds())],
-            'meal' => ['required', Rule::in(['lunch', 'dinner'])],
-        ], ['kitchen_dish_id.in' => 'Pick one of today’s dishes.']);
+        $data = $request->validated();
 
         $pick->update(['plan_kitchen_dish_id' => $data['kitchen_dish_id'], 'plan_meal' => $data['meal'], 'planned_at' => now()]);
 

@@ -4,15 +4,17 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Enums\NotificationType;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Resources\UserResource;
+use App\Mail\WelcomeMail;
 use App\Models\Device;
 use App\Models\User;
 use App\Services\KitchenService;
 use App\Services\NotificationService;
-use App\Mail\WelcomeMail;
 use App\Support\Activity;
 use App\Support\Mailer;
-use App\Support\Rules;
+use App\Support\Tokens;
 use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,11 +22,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 
-/**
- */
 #[Group('Auth', weight: 1)]
 class AuthController extends Controller
 {
@@ -36,44 +34,9 @@ class AuthController extends Controller
      *
      * @unauthenticated
      */
-    public function register(Request $request, KitchenService $kitchens, NotificationService $notifications): JsonResponse
+    public function register(RegisterRequest $request, KitchenService $kitchens, NotificationService $notifications): JsonResponse
     {
-        $request->merge(['email' => is_string($request->input('email')) ? strtolower(trim($request->input('email'))) : $request->input('email')]);
-
-        $data = $request->validate([
-            'name' => Rules::name(),
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'password' => [...Rules::password(), 'confirmed'],
-            'password_confirmation' => ['required'],
-            'terms_accepted' => ['accepted'],
-            'device_name' => ['nullable', 'string', 'max:100'],
-            'timezone' => ['nullable', 'timezone:all'],
-            'kitchen' => ['required', 'array'],
-            ...Rules::kitchen('kitchen.'),
-            'location' => ['nullable', 'array'],
-            'location.mode' => ['required_with:location', Rule::in(['gps', 'city'])],
-            'location.city_id' => ['required_if:location.mode,city', 'nullable', 'integer', 'exists:cities,id'],
-            'location.lat' => ['required_if:location.mode,gps', 'nullable', 'numeric', 'between:-90,90'],
-            'location.lng' => ['required_if:location.mode,gps', 'nullable', 'numeric', 'between:-180,180'],
-            'dish_ids' => ['present', 'array', 'max:500'],
-            'dish_ids.*' => ['integer', 'distinct', 'exists:dishes,id'],
-            'custom_dishes' => ['nullable', 'array', 'max:50'],
-            'custom_dishes.*.name' => ['required', 'string', 'min:2', 'max:40', 'regex:'.Rules::DISH_NAME_REGEX],
-            'custom_dishes.*.category' => ['nullable', 'string', 'exists:categories,key'],
-        ], [
-            ...Rules::nameMessages(),
-            ...Rules::emailMessages(),
-            ...Rules::passwordMessages(),
-            ...Rules::kitchenMessages('kitchen.'),
-            'password_confirmation.required' => 'Confirm your password.',
-            'terms_accepted.accepted' => 'Please accept the terms to continue.',
-        ]);
-
-        $total = count($data['dish_ids']) + count($data['custom_dishes'] ?? []);
-        $min = (int) config('handi.picks.min_onboarding_dishes', 10);
-        if ($total < $min) {
-            throw ValidationException::withMessages(['dish_ids' => ["Pick at least {$min} dishes."]]);
-        }
+        $data = $request->validated();
 
         $user = DB::transaction(function () use ($data, $kitchens) {
             $user = User::create([
@@ -126,19 +89,9 @@ class AuthController extends Controller
      *
      * @unauthenticated
      */
-    public function login(Request $request): JsonResponse
+    public function login(LoginRequest $request): JsonResponse
     {
-        $request->merge(['email' => is_string($request->input('email')) ? strtolower(trim($request->input('email'))) : $request->input('email')]);
-
-        $data = $request->validate([
-            'email' => ['required', 'string', 'email'],
-            'password' => ['required', 'string'],
-            'device_name' => ['nullable', 'string', 'max:100'],
-        ], [
-            'email.required' => 'Enter your email.',
-            'email.email' => 'That doesn’t look like an email.',
-            'password.required' => 'Enter your password.',
-        ]);
+        $data = $request->validated();
 
         $key = 'login:'.$data['email'].'|'.$request->ip();
         $max = (int) config('handi.auth.max_login_attempts', 5);
@@ -205,7 +158,7 @@ class AuthController extends Controller
      */
     public function logout(Request $request): Response
     {
-        $tokenId = \App\Support\Tokens::currentId($request->user());
+        $tokenId = Tokens::currentId($request->user());
 
         if ($tokenId) {
             Device::where('personal_access_token_id', $tokenId)->delete();

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\AccountController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CatalogController;
+use App\Http\Controllers\Api\V1\ContactController;
 use App\Http\Controllers\Api\V1\CustomDishController;
 use App\Http\Controllers\Api\V1\DishController;
 use App\Http\Controllers\Api\V1\HealthController;
@@ -34,6 +35,9 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::get('image-prompt', [CatalogController::class, 'imagePrompt'])->name('image-prompt');
         Route::post('preview-picks', PreviewController::class)->name('preview-picks');
     });
+
+    // Contact us: open to everyone (a token, if sent, links the message to the account).
+    Route::post('contact', ContactController::class)->middleware('throttle:contact')->name('contact');
 
     // ---------------------------------------------------------------- Auth
     Route::prefix('auth')->name('auth.')->middleware('throttle:auth')->group(function () {

@@ -29,6 +29,8 @@ it('serves the legal, account-deletion and sitemap pages', function (string $url
     ['/terms', 'Terms of use'],
     ['/delete-account', 'Delete your Handi account'],
     ['/support', 'How can we help?'],
+    ['/contact', 'Send us a message'],
+    ['/sitemap.xml', '/contact'],
     ['/sitemap.xml', '/support'],
     ['/sitemap.xml', '/delete-account'],
 ]);
@@ -86,8 +88,8 @@ it('serves the web app page for every /app address', function (string $url) {
         ->assertHeader('Cache-Control')
         ->assertHeader('Permissions-Policy', 'camera=(self), microphone=(), geolocation=(self), interest-cohort=()')
         ->assertCookieMissing('laravel_session');
-    expect($this->get($url)->headers->get('Content-Security-Policy'))->toContain("script-src 'self'")->toContain("connect-src 'self'");
-})->with(['/app', '/app/welcome', '/app/today', '/app/setup/family']);
+    expect($this->get($url)->headers->get('Content-Security-Policy'))->toContain("script-src 'self'")->toContain("connect-src 'self' blob: data:");
+})->with(['/app', '/app/welcome', '/app/today', '/app/setup/family', '/app/contact']);
 
 it('returns 404 for missing web app files instead of the app page', function () {
     $this->get('/app/_expo/static/js/web/old-build.js')->assertNotFound();

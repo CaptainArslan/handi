@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Catalog\CitiesRequest;
+use App\Http\Requests\Catalog\LibraryDishesRequest;
+use App\Http\Requests\Catalog\WeatherRequest;
 use App\Http\Resources\CategoryResource;
 use App\Http\Resources\CityResource;
 use App\Http\Resources\LibraryDishResource;
@@ -10,6 +13,7 @@ use App\Models\Category;
 use App\Models\City;
 use App\Models\Dish;
 use App\Models\Province;
+use App\Models\Setting;
 use App\Services\WeatherService;
 use App\Support\CatalogCache;
 use App\Support\ImagePrompt;
@@ -17,8 +21,6 @@ use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-/**
- */
 #[Group('Public catalog', weight: 0)]
 class CatalogController extends Controller
 {
@@ -29,12 +31,9 @@ class CatalogController extends Controller
      *
      * @unauthenticated
      */
-    public function dishes(Request $request): JsonResponse
+    public function dishes(LibraryDishesRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'q' => ['nullable', 'string', 'max:40'],
-            'category' => ['nullable', 'string', 'max:40'],
-        ]);
+        $data = $request->validated();
 
         $all = CatalogCache::remember('library', fn () => LibraryDishResource::collection(
             Dish::active()->with('category')->orderBy('name')->get()
@@ -70,9 +69,9 @@ class CatalogController extends Controller
      *
      * @unauthenticated
      */
-    public function cities(Request $request): JsonResponse
+    public function cities(CitiesRequest $request): JsonResponse
     {
-        $data = $request->validate(['q' => ['nullable', 'string', 'max:30']]);
+        $data = $request->validated();
         $q = mb_strtolower(trim($data['q'] ?? ''));
 
         $provinces = CatalogCache::remember('cities', fn () => Province::with('cities.province')->orderBy('sort_order')->get()
@@ -99,13 +98,9 @@ class CatalogController extends Controller
      *
      * @unauthenticated
      */
-    public function weather(Request $request, WeatherService $weather): JsonResponse
+    public function weather(WeatherRequest $request, WeatherService $weather): JsonResponse
     {
-        $data = $request->validate([
-            'city_id' => ['required_without:lat', 'nullable', 'integer', 'exists:cities,id'],
-            'lat' => ['required_without:city_id', 'nullable', 'numeric', 'between:-90,90'],
-            'lng' => ['required_with:lat', 'nullable', 'numeric', 'between:-180,180'],
-        ]);
+        $data = $request->validated();
 
         if (! empty($data['city_id'])) {
             $city = City::with('province')->findOrFail($data['city_id']);
@@ -148,7 +143,7 @@ class CatalogController extends Controller
             'template' => $s['template'],
             'ai_name' => $s['ai_name'],
             'ai_url' => $s['ai_url'],
-            'updated_at' => \App\Models\Setting::updatedAt(ImagePrompt::KEY),
+            'updated_at' => Setting::updatedAt(ImagePrompt::KEY),
         ]]);
     }
 }

@@ -4,18 +4,18 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Enums\NotificationType;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Meal\StoreMealRequest;
+use App\Http\Requests\Meal\SyncRequest;
 use App\Models\MealLog;
 use App\Models\User;
 use App\Services\NotificationService;
 use App\Support\Activity;
 use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use Illuminate\Routing\Redirector;
 use Illuminate\Validation\ValidationException;
 use Throwable;
 
-/**
- */
 #[Group('History', weight: 8)]
 class SyncController extends Controller
 {
@@ -26,13 +26,9 @@ class SyncController extends Controller
      * `{op: "meal.create", payload: {id, kitchen_dish_id, date, meal, source}}` or `{op: "meal.delete", payload: {id}}`.
      * Results come back in the same order.
      */
-    public function __invoke(Request $request, NotificationService $notifications): JsonResponse
+    public function __invoke(SyncRequest $request, NotificationService $notifications): JsonResponse
     {
-        $data = $request->validate([
-            'operations' => ['required', 'array', 'max:200'],
-            'operations.*.op' => ['required', 'in:meal.create,meal.delete'],
-            'operations.*.payload' => ['required', 'array'],
-        ]);
+        $data = $request->validated();
 
         /** @var User $user */
         $user = $request->user();
@@ -42,8 +38,11 @@ class SyncController extends Controller
         foreach ($data['operations'] as $operation) {
             try {
                 if ($operation['op'] === 'meal.create') {
-                    $sub = Request::create('/', 'POST', $operation['payload']);
+                    // Validated exactly like POST /me/meals.
+                    $sub = StoreMealRequest::create('/', 'POST', $operation['payload']);
                     $sub->setUserResolver(fn () => $user);
+                    $sub->setContainer(app())->setRedirector(app(Redirector::class));
+                    $sub->validateResolved();
                     $response = app(MealController::class)->store($sub);
                     $body = $response->getData(true);
                     $results[] = ['ok' => true, 'id' => $body['data']['id'], 'duplicate' => $body['meta']['duplicate'] ?? false];

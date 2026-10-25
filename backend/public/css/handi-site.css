@@ -334,3 +334,51 @@ p { margin: 0; }
 .lost { min-height: 60vh; display: grid; place-items: center; text-align: center; padding-block: 64px; }
 .lost h1 { font-size: clamp(32px, 5vw, 48px); margin-block: 16px 10px; }
 .lost p { color: var(--muted); margin-bottom: 24px; }
+
+/* Contact form */
+.contact-page .lead { margin-bottom: 28px; }
+.contact-form { display: grid; gap: 22px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; box-shadow: var(--shadow); margin-bottom: 40px; }
+.field-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.field { display: grid; gap: 6px; align-content: start; min-width: 0; border: 0; padding: 0; margin: 0; }
+.field label, .field legend { font-size: 14px; font-weight: 600; color: var(--ink-2); padding: 0; }
+.field legend { margin-bottom: 8px; }
+.field .optional { font-weight: 400; color: var(--muted); }
+.field input[type=text], .field input[type=email], .field textarea { width: 100%; font: 500 16px/1.5 var(--font); color: var(--ink); background: var(--surface); border: 1.5px solid var(--border); border-radius: 14px; padding: 13px 16px; transition: border-color .2s, box-shadow .2s; }
+.field textarea { resize: vertical; min-height: 160px; }
+.field input::placeholder, .field textarea::placeholder { color: #9A9187; }
+.field input:focus, .field textarea:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 4px #DCEDE6; }
+.field.has-error input, .field.has-error textarea, .field.has-error .file-drop { border-color: #B3402A; }
+.field.has-error input:focus, .field.has-error textarea:focus { box-shadow: 0 0 0 4px #F8E1DA; }
+.field-help { font-size: 13px; color: var(--muted); }
+.field-error { font-size: 13px; color: #B3402A; font-weight: 500; }
+.form-alert { background: #FBE6E0; color: #7A2E1B; border-radius: 14px; padding: 12px 14px; font-size: 14px; }
+.topic-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { position: relative; cursor: pointer; }
+.chip input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.chip span { display: inline-flex; align-items: center; min-height: 42px; padding: 0 16px; border-radius: 99px; border: 1.5px solid var(--border); background: var(--surface); font-size: 14px; font-weight: 600; color: var(--ink); transition: background .2s, border-color .2s, color .2s; }
+.chip:hover span { border-color: var(--green-soft); }
+.chip input:checked + span { background: var(--green); border-color: var(--green); color: #fff; }
+.chip input:focus-visible + span { outline: 3px solid var(--amber); outline-offset: 2px; }
+.file-drop { min-width: 0; display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border: 1.5px dashed #CFC6B8; border-radius: 14px; color: var(--green); background: var(--surface-alt); }
+.file-drop svg { width: 22px; height: 22px; flex: none; margin-top: 2px; }
+.file-body { display: grid; gap: 8px; min-width: 0; }
+.file-drop small { color: var(--muted); font-size: 13px; }
+.file-input { font: 400 14px var(--font); color: var(--ink-2); width: 100%; min-width: 0; }
+.file-input::file-selector-button { font: 600 13px var(--font); padding: 8px 14px; margin-right: 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--sand); color: var(--ink); cursor: pointer; }
+.hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+.btn-send { justify-self: start; min-width: 200px; }
+.btn-send svg { width: 18px; height: 18px; }
+.contact-sent { text-align: center; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 40px 28px; box-shadow: var(--shadow); margin-bottom: 40px; display: grid; justify-items: center; gap: 12px; }
+.contact-sent-icon { width: 72px; height: 72px; border-radius: 24px; background: var(--mint); color: var(--green); display: grid; place-items: center; }
+.contact-sent-icon svg { width: 34px; height: 34px; }
+.contact-sent h2 { font-size: 26px; }
+.contact-sent p { color: var(--muted); max-width: 46ch; }
+.contact-sent-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 8px; }
+@media (max-width: 640px) {
+  .contact-form { padding: 20px; }
+  .field-row { grid-template-columns: minmax(0, 1fr); }
+  .btn-send { justify-self: stretch; }
+}
+
+.site-footer a { overflow-wrap: anywhere; }
+.nav-links a[aria-current=page] { background: var(--mint); color: var(--green); }

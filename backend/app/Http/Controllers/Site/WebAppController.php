@@ -38,7 +38,8 @@ class WebAppController extends Controller
                 "img-src 'self' data: blob: https:",
                 "media-src 'self' blob:",
                 "font-src 'self' data:",
-                "connect-src 'self'",
+                // blob:/data: let the app read a photo or file the person just picked before uploading it.
+                "connect-src 'self' blob: data:",
                 "worker-src 'self' blob:",
                 "frame-ancestors 'none'",
                 "base-uri 'self'",

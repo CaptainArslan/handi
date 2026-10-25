@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Meal\ListMealsRequest;
+use App\Http\Requests\Meal\StoreMealRequest;
+use App\Http\Requests\Meal\UpdateMealRequest;
 use App\Http\Resources\MealLogResource;
 use App\Models\KitchenDish;
 use App\Models\MealLog;
@@ -16,8 +19,7 @@ use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * History and meal logging.
@@ -30,13 +32,13 @@ class MealController extends Controller
      *
      * `month` = YYYY-MM (default: this month). Meals grouped by day, plus "{n} of {days} days logged".
      */
-    public function index(Request $request): JsonResponse
+    public function index(ListMealsRequest $request): JsonResponse
     {
         /** @var User $user */
         $user = $request->user();
         $today = UserClock::today($user);
 
-        $data = $request->validate(['month' => ['nullable', 'date_format:Y-m']]);
+        $data = $request->validated();
         $month = isset($data['month']) ? CarbonImmutable::createFromFormat('!Y-m', $data['month'], $today->timezone) : $today->startOfMonth();
         $start = $month->startOfMonth();
         $end = $month->endOfMonth()->startOfDay();
@@ -76,11 +78,11 @@ class MealController extends Controller
     #[BodyParameter('date', 'Y-m-d, today or up to 60 days back', required: true, type: 'string', format: 'date', example: '2026-10-13')]
     #[BodyParameter('meal', 'breakfast | lunch | dinner', required: true, type: 'string', example: 'dinner')]
     #[BodyParameter('source', 'suggestion (from Today) or manual (default)', type: 'string', example: 'manual')]
-    public function store(Request $request): JsonResponse
+    public function store(StoreMealRequest $request): JsonResponse
     {
         /** @var User $user */
         $user = $request->user();
-        $data = $this->validated($request, $user);
+        $data = $request->validated();
 
         if (! empty($data['id']) && ($existing = MealLog::withTrashed()->where('user_id', $user->id)->find($data['id']))) {
             return $this->respond($request, $existing->trashed() ? tap($existing)->restore() : $existing, 200, false);
@@ -89,7 +91,7 @@ class MealController extends Controller
         $dish = KitchenDish::withDetails()->where('user_id', $user->id)->findOrFail($data['kitchen_dish_id']);
 
         // Lock per user so a double tap or an offline sync racing an online log can't create two rows.
-        $lock = \Illuminate\Support\Facades\Cache::lock('meal-log:'.$user->id, 10);
+        $lock = Cache::lock('meal-log:'.$user->id, 10);
         $lock->block(5);
 
         try {
@@ -113,7 +115,7 @@ class MealController extends Controller
         return $this->respond($request, $log, 201, false);
     }
 
-    private function createLog(\App\Models\User $user, KitchenDish $dish, array $data): MealLog
+    private function createLog(User $user, KitchenDish $dish, array $data): MealLog
     {
         return MealLog::create([
             'id' => $data['id'] ?? null,
@@ -134,12 +136,12 @@ class MealController extends Controller
     #[BodyParameter('kitchen_dish_id', 'One of your dishes (GET /me/dishes)', required: false, type: 'integer', example: 12)]
     #[BodyParameter('date', 'Y-m-d, today or up to 60 days back', required: false, type: 'string', format: 'date', example: '2026-10-13')]
     #[BodyParameter('meal', 'breakfast | lunch | dinner', required: false, type: 'string', example: 'dinner')]
-    public function update(Request $request, string $id): JsonResponse
+    public function update(UpdateMealRequest $request, string $id): JsonResponse
     {
         /** @var User $user */
         $user = $request->user();
         $log = MealLog::where('user_id', $user->id)->findOrFail($id);
-        $data = $this->validated($request, $user, partial: true);
+        $data = $request->validated();
 
         if (isset($data['kitchen_dish_id'])) {
             $dish = KitchenDish::withDetails()->where('user_id', $user->id)->findOrFail($data['kitchen_dish_id']);
@@ -186,28 +188,6 @@ class MealController extends Controller
     public function stats(Request $request, StatsService $stats): JsonResponse
     {
         return response()->json(['data' => $stats->forUser($request->user())]);
-    }
-
-    private function validated(Request $request, User $user, bool $partial = false): array
-    {
-        $today = UserClock::today($user);
-        $min = $today->subDays((int) config('handi.meals.log_days_back', 60));
-        $req = $partial ? 'sometimes' : 'required';
-
-        return $request->validate([
-            'id' => ['nullable', 'uuid'],
-            'kitchen_dish_id' => [$req, 'integer', Rule::exists('kitchen_dishes', 'id')->where('user_id', $user->id)],
-            'date' => [$req, 'date_format:Y-m-d', 'before_or_equal:'.$today->toDateString(), 'after_or_equal:'.$min->toDateString()],
-            'meal' => [$req, Rule::in(['breakfast', 'lunch', 'dinner'])],
-            'source' => ['nullable', Rule::in(['suggestion', 'manual'])],
-        ], [
-            'kitchen_dish_id.required' => 'Pick the dish you cooked.',
-            'kitchen_dish_id.exists' => 'Pick the dish you cooked.',
-            'date.required' => 'Choose a date.',
-            'date.date_format' => 'Choose a date.',
-            'date.before_or_equal' => 'You can’t log a meal in the future.',
-            'date.after_or_equal' => 'You can log up to '.config('handi.meals.log_days_back', 60).' days back (from '.$min->format('j M').').',
-        ]);
     }
 
     private function respond(Request $request, MealLog $log, int $status, bool $duplicate): JsonResponse

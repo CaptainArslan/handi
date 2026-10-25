@@ -3,21 +3,17 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Catalog\PreviewPicksRequest;
 use App\Http\Resources\LibraryDishResource;
 use App\Models\City;
 use App\Models\Dish;
 use App\Services\KitchenService;
 use App\Services\PickService;
 use App\Services\WeatherService;
-use App\Support\Rules;
 use App\Support\UserClock;
 use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
-/**
- */
 #[Group('Public catalog', weight: 0)]
 class PreviewController extends Controller
 {
@@ -28,18 +24,9 @@ class PreviewController extends Controller
      *
      * @unauthenticated
      */
-    public function __invoke(Request $request, PickService $picks, WeatherService $weather, KitchenService $kitchens): JsonResponse
+    public function __invoke(PreviewPicksRequest $request, PickService $picks, WeatherService $weather, KitchenService $kitchens): JsonResponse
     {
-        $data = $request->validate([
-            'dish_ids' => ['required', 'array', 'min:1', 'max:500'],
-            'dish_ids.*' => ['integer'],
-            'location' => ['nullable', 'array'],
-            'location.mode' => ['required_with:location', Rule::in(['gps', 'city'])],
-            'location.city_id' => ['required_if:location.mode,city', 'nullable', 'integer', 'exists:cities,id'],
-            'location.lat' => ['required_if:location.mode,gps', 'nullable', 'numeric', 'between:-90,90'],
-            'location.lng' => ['required_if:location.mode,gps', 'nullable', 'numeric', 'between:-180,180'],
-            ...Rules::kitchen(partial: true),
-        ], Rules::kitchenMessages());
+        $data = $request->validated();
 
         $forecast = null;
         if (($data['location']['mode'] ?? null) === 'city') {

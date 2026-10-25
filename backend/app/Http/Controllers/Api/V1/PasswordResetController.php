@@ -3,18 +3,20 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\ResetEmailRequest;
+use App\Http\Requests\Auth\ResetPasswordRequest;
+use App\Http\Requests\Auth\VerifyResetCodeRequest;
+use App\Mail\PasswordChangedMail;
 use App\Models\AuthCode;
 use App\Models\User;
 use App\Services\AuthCodeService;
-use App\Mail\PasswordChangedMail;
 use App\Support\Activity;
 use App\Support\Mailer;
-use App\Support\Rules;
 use Dedoc\Scramble\Attributes\BodyParameter;
 use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Password reset by a 6-digit email code.
@@ -33,9 +35,9 @@ class PasswordResetController extends Controller
      * @unauthenticated
      */
     #[BodyParameter('email', 'The account email', required: true, type: 'string', format: 'email', example: 'hina@example.com')]
-    public function forgot(Request $request): JsonResponse
+    public function forgot(ResetEmailRequest $request): JsonResponse
     {
-        $email = $this->email($request);
+        $email = $request->validated('email');
         $user = User::where('email', $email)->first();
         $current = $this->codes->current(AuthCode::PASSWORD_RESET, $email);
 
@@ -55,9 +57,9 @@ class PasswordResetController extends Controller
      * @unauthenticated
      */
     #[BodyParameter('email', 'The account email', required: true, type: 'string', format: 'email', example: 'hina@example.com')]
-    public function resend(Request $request): JsonResponse
+    public function resend(ResetEmailRequest $request): JsonResponse
     {
-        $email = $this->email($request);
+        $email = $request->validated('email');
         $current = $this->codes->current(AuthCode::PASSWORD_RESET, $email);
         $wait = $this->codes->resendWait($current);
 
@@ -82,13 +84,10 @@ class PasswordResetController extends Controller
      * @unauthenticated
      */
     #[BodyParameter('email', 'The account email', required: true, type: 'string', format: 'email', example: 'hina@example.com')]
-    public function verify(Request $request): JsonResponse
+    public function verify(VerifyResetCodeRequest $request): JsonResponse
     {
-        $email = $this->email($request);
-        $data = $request->validate(['code' => ['required', 'digits:6']], [
-            'code.required' => 'Enter the 6-digit code.',
-            'code.digits' => 'Enter the 6-digit code.',
-        ]);
+        $data = $request->validated();
+        $email = $data['email'];
 
         $code = $this->codes->current(AuthCode::PASSWORD_RESET, $email);
 
@@ -117,17 +116,9 @@ class PasswordResetController extends Controller
      *
      * @unauthenticated
      */
-    public function reset(Request $request): Response|JsonResponse
+    public function reset(ResetPasswordRequest $request): Response|JsonResponse
     {
-        $data = $request->validate([
-            'reset_token' => ['required', 'string'],
-            'password' => [...Rules::password(), 'regex:/^\S(.*\S)?$/s', 'confirmed'],
-            'password_confirmation' => ['required'],
-        ], [
-            ...Rules::passwordMessages(),
-            'password.regex' => 'Use 8+ characters with a letter and a number, and no spaces at the start or end.',
-            'password_confirmation.required' => 'Confirm your new password.',
-        ]);
+        $data = $request->validated();
 
         $code = $this->codes->findByResetToken($data['reset_token']);
 
@@ -136,12 +127,12 @@ class PasswordResetController extends Controller
         }
 
         // Use the token exactly once, atomically: a second parallel request gets "expired".
-        if (\App\Models\AuthCode::whereKey($code->id)->whereNull('consumed_at')->update(['consumed_at' => now()]) === 0) {
+        if (AuthCode::whereKey($code->id)->whereNull('consumed_at')->update(['consumed_at' => now()]) === 0) {
             return response()->json(['message' => 'This reset link has expired. Request a new code.', 'errors' => ['reset_token' => ['This reset link has expired. Request a new code.']]], 422);
         }
 
         $user = $code->user;
-        \Illuminate\Support\Facades\DB::transaction(function () use ($user, $data) {
+        DB::transaction(function () use ($user, $data) {
             $user->forceFill(['password' => $data['password'], 'password_changed_at' => now()])->save();
             $user->tokens()->delete();
             $user->devices()->delete();
@@ -151,16 +142,6 @@ class PasswordResetController extends Controller
         Mailer::notice($user->email, new PasswordChangedMail($user, Mailer::when($user), Mailer::device($request), true));
 
         return response()->noContent();
-    }
-
-    private function email(Request $request): string
-    {
-        $request->merge(['email' => is_string($request->input('email')) ? strtolower(trim($request->input('email'))) : $request->input('email')]);
-
-        return $request->validate(['email' => ['required', 'string', 'email']], [
-            'email.required' => 'Enter the email you signed up with.',
-            'email.email' => 'Enter a valid email, like name@example.com.',
-        ])['email'];
     }
 
     private function accepted(string $email, ?AuthCode $code): JsonResponse

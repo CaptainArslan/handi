@@ -154,7 +154,7 @@ Telescope is already installed; `php artisan migrate` creates its tables.
 php artisan test
 ```
 
-77 tests on in-memory SQLite (needs `pdo_sqlite`). Covers every endpoint, the pick rules, offline sync, reminders, the API docs gate and every admin page (users, user detail tabs, activity log, library, dish import, image preview). Weather and Expo push are faked — tests never hit the network.
+147 tests on in-memory SQLite (needs `pdo_sqlite`). Covers every endpoint, the pick rules, offline sync, reminders, the API docs gate, every admin page (users, user detail tabs, activity log, library, dish import, image preview), the contact form (app, website, admin inbox, replies) and every email. Weather and Expo push are faked — tests never hit the network.
 
 ## How it fits together
 
