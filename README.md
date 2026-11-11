@@ -10,7 +10,7 @@
 ![React Native 0.86](https://img.shields.io/badge/React%20Native-0.86-61DAFB?logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 
-**Live:** website [handi.hegemonicinc.com](https://handi.hegemonicinc.com) · app in the browser [/app](https://handi.hegemonicinc.com/app) · Android app in Google Play testing.
+**Live:** website [handi.hegemonicinc.com](https://handi.hegemonicinc.com) · app in the browser [/app](https://handi.hegemonicinc.com/app) · [Android app on Google Play](https://play.google.com/store/apps/details?id=com.hegemonic.handi).
 
 ## The idea
 
@@ -628,7 +628,8 @@ Every secret and setting lives in `.env`, which is git-ignored. `backend/.env.ex
 | `HANDI_CONTACT_EMAIL` | Where contact form messages are emailed (default: `HANDI_SUPPORT_EMAIL`) |
 | `HANDI_CONTACT_REPLY_TO` | Reply-To on replies sent from the admin, so answers come back to you (default: `HANDI_SUPPORT_EMAIL`) |
 | `MAIL_*` | SMTP server for every email (codes, welcome, contact, replies) |
-| `HANDI_ANDROID_URL`, `HANDI_IOS_URL` | Store links on the website ("Coming soon" while empty) |
+| `HANDI_ANDROID_URL` | Android Play Store link (defaults to the live listing; override per environment) |
+| `HANDI_IOS_URL` | iOS App Store link (leave empty until the iOS app ships; website shows "Coming soon") |
 | `HANDI_LINK_TODAY`, `HANDI_LINK_RESET_PASSWORD` | Email buttons (default: the web app at `/app/...`) |
 | `EXPO_PUBLIC_API_BASE_URL` (app) | The only app setting |
 

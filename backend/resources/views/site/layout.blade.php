@@ -1,7 +1,7 @@
-{{-- Public website layout. Same palette and type as the app. No JavaScript (animations are CSS); CSS is inlined so the first paint needs one request. --}}
+﻿{{-- Public website layout. Same palette and type as the app. No JavaScript (animations are CSS); CSS is inlined so the first paint needs one request. --}}
 @php
     $title = trim($__env->yieldContent('title')) ?: 'Handi — Aaj kya pakaen? 3 dishes every morning';
-    $description = trim($__env->yieldContent('description')) ?: 'Handi suggests three dishes your family already cooks every morning, matched to today’s weather and what you haven’t had lately. Free on the web, Android and iPhone.';
+    $description = trim($__env->yieldContent('description')) ?: 'Handi suggests three dishes your family already cooks every morning, matched to today’s weather and what you haven’t had lately. Free on the web and Android.';
     $canonical = url()->current();
 @endphp
 <!DOCTYPE html>

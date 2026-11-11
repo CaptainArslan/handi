@@ -71,6 +71,12 @@ it('inlines the site css with root-relative font urls', function () {
     expect($html)->toContain("url('/fonts/site/poppins-400.woff2')")->not->toContain("url('http");
 });
 
+it('shows the Android Play Store link on the homepage', function () {
+    $this->get('/')
+        ->assertSee('https://play.google.com/store/apps/details?id=com.hegemonic.handi', false)
+        ->assertSee('Get it on');
+});
+
 it('shows store links once they are set', function () {
     config(['handi.store_links.android' => 'https://play.google.com/store/apps/details?id=com.hegemonic.handi']);
     $this->get('/')->assertSee('https://play.google.com/store/apps/details?id=com.hegemonic.handi', false)->assertSee('Get it on');

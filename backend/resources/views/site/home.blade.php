@@ -18,13 +18,37 @@
     <link rel="preload" as="image" href="{{ $art['lentils']['lg'] }}" imagesrcset="{{ $art['lentils']['lg'] }} 1x, {{ $art['lentils']['lg2x'] }} 2x" fetchpriority="high">
     <script type="application/ld+json">{!! json_encode([
         '@context' => 'https://schema.org',
-        '@type' => 'MobileApplication',
-        'name' => 'Handi — What to Cook',
-        'operatingSystem' => 'Android, iOS, Web',
-        'applicationCategory' => 'LifestyleApplication',
-        'description' => 'Three dishes your family already cooks, suggested every morning and matched to the weather.',
-        'offers' => ['@type' => 'Offer', 'price' => '0', 'priceCurrency' => 'PKR'],
-        'url' => url('/'),
+        '@graph' => [
+            [
+                '@type' => 'Organization',
+                '@id' => url('/').'#org',
+                'name' => 'Handi',
+                'url' => url('/'),
+                'logo' => asset('images/site/icon-192.png'),
+                'email' => config('handi.support_email'),
+                'sameAs' => array_values(array_filter([config('handi.store_links.android'), config('handi.store_links.ios')])),
+            ],
+            [
+                '@type' => 'WebSite',
+                '@id' => url('/').'#website',
+                'name' => 'Handi',
+                'alternateName' => ['Handi — What to Cook Today', 'Aaj kya pakaen'],
+                'url' => url('/'),
+                'inLanguage' => 'en',
+                'publisher' => ['@id' => url('/').'#org'],
+            ],
+            array_filter([
+                '@type' => 'MobileApplication',
+                'name' => 'Handi — What to Cook Today',
+                'operatingSystem' => 'Android, iOS, Web',
+                'applicationCategory' => 'LifestyleApplication',
+                'description' => 'Three dishes your family already cooks, suggested every morning and matched to the weather.',
+                'offers' => ['@type' => 'Offer', 'price' => '0', 'priceCurrency' => 'PKR'],
+                'url' => url('/'),
+                'installUrl' => config('handi.store_links.android') ?: null,
+                'publisher' => ['@id' => url('/').'#org'],
+            ]),
+        ],
     ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
 @endpush
 

@@ -77,9 +77,9 @@ return [
         ],
     ],
 
-    // Store pages shown on the website. Leave empty until the app is live ("Coming soon" is shown instead).
+    // Store pages shown on the website. Android is live; iOS shows "Coming soon" until HANDI_IOS_URL is set.
     'store_links' => [
-        'android' => env('HANDI_ANDROID_URL'),
+        'android' => env('HANDI_ANDROID_URL', 'https://play.google.com/store/apps/details?id=com.hegemonic.handi'),
         'ios' => env('HANDI_IOS_URL'),
     ],
 

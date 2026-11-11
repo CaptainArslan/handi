@@ -9,7 +9,7 @@
 <div class="stores stores-{{ $tone }}">
     @foreach ($stores as $s)
         @if ($s['url'])
-            <a class="store" href="{{ $s['url'] }}" rel="noopener">
+            <a class="store" href="{{ $s['url'] }}" target="_blank" rel="noopener">
         @else
             <span class="store is-soon" aria-label="{{ $s['name'] }}, coming soon">
         @endif

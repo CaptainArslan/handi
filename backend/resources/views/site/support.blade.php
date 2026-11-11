@@ -37,7 +37,7 @@
 
         <section>
             <h2>About the app</h2>
-            <p class="muted">Handi · {{ config('handi.app_name') }} · free, no ads, no in-app purchases. Available on the web, with Android and iPhone apps coming to the stores.</p>
+            <p class="muted">Handi · {{ config('handi.app_name') }} · free, no ads, no in-app purchases. Available on the web and Android; iPhone app coming soon.</p>
         </section>
     </article>
 @endsection
